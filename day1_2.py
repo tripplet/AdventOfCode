@@ -121,6 +121,6 @@ def calc_fuel(mass):
 
 result = 0
 for mass in input_str.splitlines():
-    result += rocket_equation_fuel(int(mass))   
- 
+    result += rocket_equation_fuel(int(mass))
+
 print(result)
