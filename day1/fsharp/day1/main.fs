@@ -2,13 +2,12 @@
     
 let CalcFuelForMass mass = (int)(mass / 3) - 2
 
-let CalcFuelForFuel mass = 
-    let mutable fuel = 0
-    let mutable currentMass = mass
-    while currentMass > 8 do
-        currentMass <- CalcFuelForMass currentMass
-        fuel <- fuel + currentMass
-    fuel
+let rec CalcFuelForFuel mass = 
+    if mass > 8 then
+        let fuel = (CalcFuelForMass mass)        
+        fuel + CalcFuelForFuel fuel
+    else
+        0
 
 let GetFileContent filename = File.ReadAllLines filename |> Array.map int
 
