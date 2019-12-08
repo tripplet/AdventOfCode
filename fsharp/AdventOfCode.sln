@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day1", "day1.fsproj", "{CBD087C7-0C97-45C3-AC7F-3C185740C436}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AdventOfCode", "AdventOfCode.fsproj", "{CBD087C7-0C97-45C3-AC7F-3C185740C436}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

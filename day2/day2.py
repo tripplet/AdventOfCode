@@ -40,8 +40,8 @@ def find_target():
         file_content = read(fp.read())
     data = read(file_content)
 
-    for noun in range(0,99):
-        for verb in range(0,99):
+    for noun in range(0,100):
+        for verb in range(0,100):
             if calc(data, noun, verb) == target:
                 print(noun, verb)
                 print(100 * noun + verb)
