@@ -18,7 +18,7 @@ def parse(line):
     prev_len = 0
     for command in line.split(','):
         direction = command[0]
-        length = int(command[1:])        
+        length = int(command[1:])
         if direction == 'R':
             new_pos = Point(pos.x + length, pos[1])
         if direction == 'L':
@@ -84,7 +84,7 @@ def get_length_till_point(line, idx, point):
 
 
 def nearest_by_line_length(crossings, line1, line2):
-    distances = map(lambda entry: 
+    distances = map(lambda entry:
         get_length_till_point(line1, entry[1], entry[0]) + \
         get_length_till_point(line2, entry[2], entry[0]), crossings)
     #print(list(distances))
@@ -95,20 +95,13 @@ def calc_manhattan_distance(line1, line2):
     cross = find_crossings(line1, line2)
     print(cross)
     print(nearest_to_center(cross))
-    
-    
+
+
 def calc_line_length_distance(line1, line2):
     cross = find_crossings(line1, line2)
     print(cross)
     print(nearest_by_line_length(cross, line1, line2))
-    
-    
-    
-    
-    
-    
-    
-    
+
 
 line1 = parse('R75,D30,R83,U83,L12,D49,R71,U7,L72')
 line2 = parse('U62,R66,U55,R34,D71,R55,D58,R83')
