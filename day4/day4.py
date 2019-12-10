@@ -15,12 +15,12 @@ def any_two_adjacent_digits_match(digits):
 
 def exactly_two_adjacent_digits_match(digits):
     for idx in range(len(digits) - 1):
-        nb_after = digits[idx + 2] if idx + 2 < len(digits) else None
-        nb_before = digits[idx - 1] if idx - 1 >= 0 else None
+        nb_after = digits[idx + 2] if idx + 2 < len(digits) else -1
+        nb_before = digits[idx - 1] if idx - 1 >= 0 else -1
 
         if digits[idx] == digits[idx+1] and \
-           (digits[idx] != nb_before or nb_before is None) and \
-           (digits[idx] != nb_after or nb_after is None):
+           (digits[idx] != nb_before or nb_before == -1) and \
+           (digits[idx] != nb_after or nb_after == -1):
             return True
     return False
 
