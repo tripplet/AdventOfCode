@@ -73,7 +73,7 @@ def find_crossings(line1, line2):
 
 def nearest_to_center(crossings):
     distances = map(lambda pos: abs(pos[0].x) + abs(pos[0].y), crossings)
-    return reduce(lambda d1, d2: min(d1, d2), distances)
+    return min(distances)
 
 
 def get_length_till_point(line, idx, point):
@@ -88,7 +88,7 @@ def nearest_by_line_length(crossings, line1, line2):
         get_length_till_point(line1, entry[1], entry[0]) + \
         get_length_till_point(line2, entry[2], entry[0]), crossings)
     #print(list(distances))
-    return reduce(lambda d1, d2: min(d1, d2), distances)
+    return min(distances)
 
 
 def calc_manhattan_distance(line1, line2):
