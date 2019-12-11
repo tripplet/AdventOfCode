@@ -1,4 +1,3 @@
-
 # User-specific files VisualStudio files
 *.suo
 
@@ -15,3 +14,6 @@
 **/obj/[Dd]ebug/
 **/obj/[Rr]elease/
 *.cache
+
+# Python files
+*.pyc
