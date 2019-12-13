@@ -88,10 +88,9 @@ def game_loop(delay):
             time.sleep(delay)
 
 
-t = threading.Thread(name='game-loop', target=game_loop, args = (delay,))
-t.start()
-
 if delay != 0:
+    t = threading.Thread(name='game-loop', target=game_loop, args = (delay,))
+    t.start()
     tkinter.mainloop()
 else:
-    t.join()
+    game_loop(delay)
