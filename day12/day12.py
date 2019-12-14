@@ -5,7 +5,6 @@ Created on Thu Dec 12 10:27:08 2019
 @author: ttobias
 """
 import copy
-from time import time
 import math
 
 import numpy as np
@@ -26,11 +25,6 @@ class Moon:
     def __eq__(self, other):
         return np.array_equal(self.pos, other.pos) and np.array_equal(self.vol, other.vol)
 
-moons = [Moon(1, 4, 4), Moon(-4, -1, 19), Moon(-15, -14, 12), Moon(-17, 1, 10)]
-#moons = [Moon(-8, -10, 0), Moon(5, 5,  10), Moon(2, -7, 3), Moon(9, -8, -3)]
-#moons = [Moon(-1, 0, 2), Moon(2, -10, -7), Moon(4, -8, 8), Moon(3, 5, -1)]
-
-moons_start = copy.deepcopy(moons)
 
 def lcm(a, b):
     return abs(a*b) // math.gcd(a, b)
@@ -44,6 +38,13 @@ def update_moons(moons):
     for m1 in range(len(moons)):
         moons[m1].velocity()
 
+
+
+moons = [Moon(1, 4, 4), Moon(-4, -1, 19), Moon(-15, -14, 12), Moon(-17, 1, 10)]
+#moons = [Moon(-8, -10, 0), Moon(5, 5,  10), Moon(2, -7, 3), Moon(9, -8, -3)]
+#moons = [Moon(-1, 0, 2), Moon(2, -10, -7), Moon(4, -8, 8), Moon(3, 5, -1)]
+
+moons_start = copy.deepcopy(moons)
 
 #start = time()
 #for _ in range(2772):

@@ -10,9 +10,9 @@ def formula_from_file(filename):
     with open(filename) as fp:
         return parse(fp.read())
 
-def parse(str):
+def parse(txt):
     formula = {}
-    for line in str.splitlines():
+    for line in txt.splitlines():
         cur = line.split(' => ')
         parts = []
         for chem in cur[0].split(', '):
@@ -43,7 +43,7 @@ def resolve(need, rest, formula):
             need[chem[0]] += chem[1] * nb_needed
 
         if out not in rest:
-             rest[out] = 0
+            rest[out] = 0
         rest[out] += nb_needed * cur_formula[0] - need[out]
         need[out] = 0
     return need, rest
@@ -72,7 +72,7 @@ def part2(formula):
         ore_needed = part1(formula, {'FUEL': possible})
         ore_needed_plus = part1(formula, {'FUEL': possible + 1})
 
-        if ore_needed <= trillion and ore_needed_plus > trillion:
+        if ore_needed <= trillion < ore_needed_plus:
             break
         elif ore_needed < trillion:
             incr *= 2
@@ -85,19 +85,18 @@ def part2(formula):
 
 
 
-assert(part1(formula_from_file('test1.txt'), {'FUEL':1}) == 31)
-assert(part1(formula_from_file('test2.txt'), {'FUEL':1}) == 165)
-assert(part1(formula_from_file('test3.txt'), {'FUEL':1}) == 13312)
-assert(part1(formula_from_file('test4.txt'), {'FUEL':1}) == 180697)
-assert(part1(formula_from_file('test5.txt'), {'FUEL':1}) == 2210736)
+assert part1(formula_from_file('test1.txt'), {'FUEL':1}) == 31
+assert part1(formula_from_file('test2.txt'), {'FUEL':1}) == 165
+assert part1(formula_from_file('test3.txt'), {'FUEL':1}) == 13312
+assert part1(formula_from_file('test4.txt'), {'FUEL':1}) == 180697
+assert part1(formula_from_file('test5.txt'), {'FUEL':1}) == 2210736
 
 ore_part1 = part1(formula_from_file('input.txt'), {'FUEL':1})
 print(f'Part 1: {ore_part1} ORE needed for 1 FUEL')
 
-assert(part2(formula_from_file('test5.txt')) == 460664)
-assert(part2(formula_from_file('test4.txt')) == 5586022)
-assert(part2(formula_from_file('test3.txt')) == 82892753)
+assert part2(formula_from_file('test5.txt')) == 460664
+assert part2(formula_from_file('test4.txt')) == 5586022
+assert part2(formula_from_file('test3.txt')) == 82892753
 
 fuel_possible = part2(formula_from_file('input.txt'))
 print(f'Part 2: {fuel_possible} FUEL can be procuded with 1 trillion ORE')
-

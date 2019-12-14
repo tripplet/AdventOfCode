@@ -68,7 +68,7 @@ for y in range(len(image)):
     for x in range(len(image[0])):
         print('#' if image[y, x] == 1 else ' ', end='')
         if image[y, x] == 1:
-            draw.point((x, y), fill=(0,0,0))
+            draw.point((x, y), fill=(0, 0, 0))
     print()
 
 png.save('output.png')

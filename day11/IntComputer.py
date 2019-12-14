@@ -27,7 +27,7 @@ class IntComputer:
         self.outputs = []
 
     @staticmethod
-    def from_string(str): return IntComputer(IntComputer.read(str))
+    def from_string(txt): return IntComputer(IntComputer.read(txt))
 
     @staticmethod
     def from_file(filename):

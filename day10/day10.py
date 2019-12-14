@@ -5,13 +5,13 @@ Created on Tue Dec 10 19:53:25 2019
 @author: ttobias
 """
 import math
-import numpy as np
 import pdb
+import numpy as np
 
 
-def parse(str):
+def parse(txt):
     char_to_int = lambda char: 0 if char == '.' else 1
-    return np.array(list(map(lambda line: [char_to_int(char) for char in line], str.splitlines())))
+    return np.array(list(map(lambda line: [char_to_int(char) for char in line], txt.splitlines())))
 
 
 def get_map(filename):
@@ -27,7 +27,7 @@ def count_visible(asteroidmap, pos):
 
     for ay in range(size_y):
         for ax in range(size_x):
-            if localmap[ay,ax] <= 0:
+            if localmap[ay, ax] <= 0:
                 continue
 
             # possible asteroid detected
@@ -36,10 +36,10 @@ def count_visible(asteroidmap, pos):
             div = math.gcd(vector[0], vector[1])
             base_vector = vector // div
 
-            if div == 1 and localmap[ay,ax] == 1:
+            if div == 1 and localmap[ay, ax] == 1:
                 # in direct line of sight
                 count += 1
-                localmap[ay,ax] = 2
+                localmap[ay, ax] = 2
             else:
                 # might be obstructed
                 check = pos + base_vector
@@ -74,7 +74,7 @@ def check_map(asteroidmap):
 
     for y in range(len(asteroidmap)):
         for x in range(len(asteroidmap[0])):
-            if asteroidmap[y,x] == 0:
+            if asteroidmap[y, x] == 0:
                 continue
             count, direct_sight_map = count_visible(asteroidmap, np.array([y, x]))
             result[y, x] = count
@@ -86,7 +86,7 @@ def check_map(asteroidmap):
 
 
 def find_plant_destroy(asteroidmap, target):
-    max_sight_map, in_sight_count, laser_pos = check_map(asteroidmap)
+    max_sight_map, _, laser_pos = check_map(asteroidmap)
 
     angles = []
     lx = laser_pos[0]
@@ -99,10 +99,10 @@ def find_plant_destroy(asteroidmap, target):
                 if max_sight_map[y, x] == 2:
                     angles.append((pos_to_angle(y - ly, x - lx) + 2*math.pi*loop, x, y))
                     max_sight_map[y, x] = 0 # destory asteroid
-        angles.sort(key = lambda pos: pos[0])
+        angles.sort(key=lambda pos: pos[0])
 
         if len(angles) < target:
-            max_sight_map, _, _ = count_visible(asteroidmap, np.array([ly, lx]))
+            max_sight_map, _ = count_visible(asteroidmap, np.array([ly, lx]))
             loop += 1
         else:
             break
@@ -121,7 +121,7 @@ def test(filename, pos, count):
     except:
         pdb.post_mortem()
 
-if False:
+if True:
     # checks
     test('test0.txt', (3, 4), 8)
     test('test1.txt', (5, 8), 33)
