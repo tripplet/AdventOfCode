@@ -8,12 +8,19 @@ from itertools import product
 
 from IntComputer import IntComputer
 
-def rotate(y, x):
-    if   y ==  1 and x ==  0: return  0, -1
-    elif y ==  0 and x == -1: return -1,  0
-    elif y == -1 and x ==  0: return  0,  1
-    elif y ==  0 and x ==  1: return  1,  0
+def rotate(v, rot):
+    result = complex(v[1], v[0]) * complex(0, rot)
+    return (int(result.imag), int(result.real))
 
+def rotate_add(pos, direction, rot):
+    result_y, result_x = rotate(direction, rot)
+    return (pos[0] + result_y, pos[1] + result_x)
+
+def at(card, pos): 
+    if pos[0] >= len(card) or pos[1] >= len(card[0]):
+        return '-'
+    else:
+        return card[pos[0]][pos[1]]
 
 prog = IntComputer.from_file('input.txt')
 prog.execute([])
@@ -47,27 +54,47 @@ print(f'Part1: {part1}')
 # Find robot
 for y, x in product(range(1, len(card) - 1), range(1, len(card[0]) - 1)):
     v = chr(card[y][x])
-    if v == '^' or v == '<' or v == '>' or v == 'v':
+    if v == '^':
+        direction = (-1, 0)
+        robot = (y, x)
+    elif v == '<':
+        direction = (0, -1)
+        robot = (y, x)
+    elif v == '>':
+        direction = (0, 1)
+        robot = (y, x)
+    elif v == 'v':
+        direction = (1, 0)
         robot = (y, x)
 
 # Find path
 path = []
-pos_x = robot[1]
-pos_y = robot[0]
-dir_x = 1
-dir_y = 0
-r = 0
+pos = robot
+
 while True:
-    next_pos_x = pos_x + dir_x
-    next_pos_y = pos_y + dir_y
-    if card[next_pos_y][next_pos_x] == scaffold:
-        path[len(path) - 1] +=1
-        pos_x = next_pos_x
-        pos_y = next_pos_y
-        r = 0
+    next_pos = pos[0] + direction[0], pos[1] + direction[1]
+    if at(card, next_pos) == scaffold:
+        path[len(path) - 1] += 1
     else:
-        dir_y, dir_x = rotate_left(dir_y, dir_x)
-        r += 1
-        if r
-        path.append('L')
-        path.append(0)
+        next_pos = rotate_add(pos, direction, -1) # left
+        if at(card, next_pos) == scaffold:
+            direction = rotate(direction, -1)
+            path.append('L')
+            path.append(0)
+            continue
+        else:
+            next_pos = rotate_add(pos, direction, 1) # right
+            if at(card, next_pos) == scaffold:
+                direction = rotate(direction, 1)
+                path.append('R')
+                path.append(0)
+                continue
+            else:
+                break
+    
+    pos = next_pos
+
+print(','.join(map(str, path)))
+
+# compress path
+
