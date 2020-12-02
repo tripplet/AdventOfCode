@@ -1,0 +1,24 @@
+[package]
+name = "adventofcode"
+version = "0.1.0"
+authors = ["Tobias Tangemann <tobias@tangemann.org>"]
+edition = "2018"
+
+[dependencies]
+aoc-runner = "0.3"
+aoc-runner-derive = "0.3"
+itertools = "0.9"
+humantime = "2.0"
+petgraph = "0.5"
+fnv = "1.0"
+regex = "1"
+
+[[bin]]
+name = "day1"
+path = "src/day2.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = 'abort'
