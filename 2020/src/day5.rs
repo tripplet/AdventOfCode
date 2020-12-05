@@ -1,5 +1,5 @@
-use std::error::Error;
 use std::cmp;
+use std::error::Error;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let input: Vec<&str> = include_str!("../input/2020/day5.txt").trim().lines().collect();
@@ -15,16 +15,19 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn part1(passes: &Vec<&str>) -> usize {
-    passes.iter().map(|s| parse_seatpass(s).2).fold(0, |a, b| cmp::max(a, b))
+    passes
+        .iter()
+        .map(|s| parse_seatpass(s).2)
+        .fold(0, |a, b| cmp::max(a, b))
 }
 
 fn part2(passes: &Vec<&str>) -> Option<usize> {
     let mut parsed: Vec<(usize, usize, usize)> = passes.iter().map(|s| parse_seatpass(s)).collect();
-    parsed.sort_by(|a,b| a.2.cmp(&b.2));
+    parsed.sort_by(|a, b| a.2.cmp(&b.2));
 
     for idx in 0..parsed.len() - 1 {
         if parsed[idx + 1].2 != parsed[idx].2 + 1 {
-            return Some(parsed[idx].2 + 1)
+            return Some(parsed[idx].2 + 1);
         }
     }
 
@@ -40,11 +43,19 @@ fn parse_seatpass(pass: &str) -> (usize, usize, usize) {
 
     for c in pass.chars() {
         match c {
-            'R' => {col += (1<<col_bit); col_bit -= 1},
+            'R' => {
+                col += 1 << col_bit;
+                col_bit -= 1
+            }
             'L' => col_bit -= 1,
-            'B' => {row += (1<<row_bit); row_bit -= 1},
+
+            'B' => {
+                row += 1 << row_bit;
+                row_bit -= 1
+            }
             'F' => row_bit -= 1,
-            _  => panic!()
+
+            _ => panic!(),
         }
     }
 
