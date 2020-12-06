@@ -1,5 +1,5 @@
 use std::error::Error;
-use regex::{Regex, Captures};
+use regex::{Regex};
 use std::collections::HashMap;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
@@ -7,10 +7,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let passports = parse(input);
     drop(input);
-
-
-    assert_eq!(check_pid("0000000000"), false);
-    assert_eq!(check_pid("000000000"), true);
 
     println!("Part1: {}", part1(&passports));
     println!("Part2: {}", part2(&passports));
@@ -36,22 +32,22 @@ fn part2(passports: &Vec<HashMap<&str, &str>>) -> isize {
     let mut valid_passports = 0;
 
     let tags = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]; // "cid"
+    let re_pid = Regex::new(r"^\d{9}$").unwrap();
+    let re_hgt = Regex::new(r"^(\d+)(cm|in)$").unwrap();
+    let re_hcl = Regex::new(r"^#[a-f0-9]{6}$").unwrap();
 
-    let mut checks: HashMap<&str, fn(&str) -> bool> = HashMap::new();
-    checks.insert("byr", check_bry);
-    checks.insert("iyr", check_iyr);
-    checks.insert("eyr", check_eyr);
-    checks.insert("hgt", check_hgt);
-    checks.insert("hcl", check_hcl);
-    checks.insert("ecl", check_ecl);
-    checks.insert("pid", check_pid);
-    checks.insert("cid", |_| true);
+    let mut checks: HashMap<&str, Box<dyn Fn(&str) -> bool>> = HashMap::new();
+    checks.insert("byr", Box::new(|i| check_min_max(i, 1920, 2002)));
+    checks.insert("iyr", Box::new(|i| check_min_max(i, 2010, 2020)));
+    checks.insert("eyr", Box::new(|i| check_min_max(i, 2020, 2030)));
+    checks.insert("hgt", Box::new(|i| check_hgt(i, &re_hgt)));
+    checks.insert("hgt", Box::new(|i| check_hgt(i, &re_hgt)));
+    checks.insert("hcl", Box::new(|i| re_hcl.is_match(i)));
+    checks.insert("ecl", Box::new(check_ecl));
+    checks.insert("pid", Box::new(|i| re_pid.is_match(i)));
+    checks.insert("cid", Box::new(|_| true));
 
     for passport in passports {
-        //for (k, v) in passport {
-            //println!("{:}={:}", k, v);
-        //}
-
         let valid_count: usize = tags.iter().filter(|t| passport.get(*t).is_some()).count();
 
         if valid_count >= 7 {
@@ -89,35 +85,17 @@ fn parse(input: &str) -> Vec<HashMap<&str, &str>> {
     passports
 }
 
-fn check_bry(i: &str) -> bool {
-    let year = i.parse::<isize>().unwrap_or(-1);
-    1920 <= year && year <= 2002
-}
-
-fn check_iyr(i: &str) -> bool {
-    let year = i.parse::<isize>().unwrap_or(-1);
-    2010 <= year && year <= 2020
-}
-
-fn check_eyr(i: &str) -> bool {
-    let year = i.parse::<isize>().unwrap_or(-1);
-    2020 <= year && year <= 2030
-}
-
-fn check_pid(i: &str) -> bool {
-    Regex::new(r"^\d{9}$").unwrap().is_match(i)
+fn check_min_max(i: &str, min: isize, max: isize) -> bool {
+    let number = i.parse::<isize>().unwrap_or(-1);
+    min <= number && number <= max
 }
 
 fn check_ecl(i: &str) -> bool {
     ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].iter().any(|s| **s == *i)
 }
 
-fn check_hcl(i: &str) -> bool {
-    Regex::new(r"^#[a-f0-9]{6}$").unwrap().is_match(i)
-}
-
-fn check_hgt(i: &str) -> bool {
-    let parsed = Regex::new(r"^(\d+)(cm|in)$").unwrap().captures(i);
+fn check_hgt(i: &str, re: &Regex) -> bool {
+    let parsed = re.captures(i);
 
     if parsed.is_none() {
         return false;

@@ -1,19 +1,15 @@
-use std::error::Error;
-
 type Groups<'a> = Vec<Vec<&'a str>>;
 
-pub fn main() -> Result<(), Box<dyn Error>> {
+pub fn main() {
     let input = include_str!("../input/2020/day6.txt").trim();
     let groups = parse(input);
     drop(input);
 
     println!("Part1: {}", part1(&groups));
     println!("Part2: {}", part2(&groups));
-
-    Ok(())
 }
 
-fn part1(groups: &Groups) -> u64 {
+pub fn part1(groups: &Groups) -> u64 {
     let mut cnt: u64 = 0;
 
     for persons in groups {
@@ -31,7 +27,7 @@ fn part1(groups: &Groups) -> u64 {
     cnt
 }
 
-fn part2(groups: &Groups) -> u64 {
+pub fn part2(groups: &Groups) -> u64 {
     let mut cnt: u64 = 0;
 
     for persons in groups {
@@ -50,7 +46,7 @@ fn part2(groups: &Groups) -> u64 {
     cnt
 }
 
-fn parse(input: &str) -> Groups {
+pub fn parse(input: &str) -> Groups {
     let mut groups: Groups = Vec::new();
     groups.push(Vec::new());
 

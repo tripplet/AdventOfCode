@@ -6,6 +6,6 @@ mod day1_test {
 
     #[test]
     fn part1_works_for_sample_input() {
-        assert_eq!(day1::part1(&SAMPLE_INPUT, 2020).unwrap(), 5145729);
+        assert_eq!(day1::part1(&SAMPLE_INPUT, 2020).unwrap(), 514579);
     }
 }
