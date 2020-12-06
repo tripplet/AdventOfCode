@@ -13,7 +13,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn part1(groups: &Groups) -> u64 {
+pub fn part1(groups: &Groups) -> u64 {
     let mut cnt: u64 = 0;
 
     for persons in groups {
@@ -31,7 +31,7 @@ fn part1(groups: &Groups) -> u64 {
     cnt
 }
 
-fn part2(groups: &Groups) -> u64 {
+pub fn part2(groups: &Groups) -> u64 {
     let mut cnt: u64 = 0;
 
     for persons in groups {
@@ -50,7 +50,7 @@ fn part2(groups: &Groups) -> u64 {
     cnt
 }
 
-fn parse(input: &str) -> Groups {
+pub fn parse(input: &str) -> Groups {
     let mut groups: Groups = Vec::new();
     groups.push(Vec::new());
 
