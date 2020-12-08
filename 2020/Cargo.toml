@@ -12,10 +12,12 @@ humantime = "2.0"
 petgraph = "0.5"
 fnv = "1.0"
 regex = "1"
+strum = "0.20"
+strum_macros = "0.20"
 
 [[bin]]
-name = "day7"
-path = "src/day7.rs"
+name = "day8"
+path = "src/day8.rs"
 
 [profile.release]
 opt-level = 3
