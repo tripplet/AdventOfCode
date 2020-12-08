@@ -11,7 +11,7 @@ pub fn main() {
     let graph = parse(input);
     drop(input);
 
-    //println!("{:?}", Dot::with_config(&graph, &[Config::EdgeNoLabel])); // Print graph as graphviz
+    //println!("{:?}", Dot::with_config(&graph, &[])); // Print graph as graphviz
 
     let mut now = std::time::Instant::now();
     println!("Part1: {}  [{}]", part1("shiny gold", &graph), humantime::format_duration(now.elapsed()));
@@ -20,7 +20,7 @@ pub fn main() {
     println!("Part2: {}  [{}]", part2("shiny gold", &graph), humantime::format_duration(now.elapsed()));
 }
 
-pub fn parse(input: &str) -> DiGraphMap::<&str, i32> {
+pub fn parse(input: &str) -> DiGraphMap::<&str, i64> {
     let mut g = DiGraphMap::new();
 
     let name = Regex::new(r"^(?P<in>\w+ \w+) bags contain ").unwrap();
@@ -35,7 +35,7 @@ pub fn parse(input: &str) -> DiGraphMap::<&str, i32> {
 
         for i in re_inside.captures_iter(line) {
             let contains = i.name("name").unwrap().as_str();
-            let count = i.name("count").unwrap().as_str().parse::<i32>().unwrap();
+            let count = i.name("count").unwrap().as_str().parse::<i64>().unwrap();
 
             g.add_edge(name, contains, count);
         }
@@ -44,7 +44,7 @@ pub fn parse(input: &str) -> DiGraphMap::<&str, i32> {
     g
 }
 
-pub fn part1(dest: &str, graph: &DiGraphMap::<&str, i32>) -> i32 {
+pub fn part1(dest: &str, graph: &DiGraphMap::<&str, i64>) -> i64 {
     let mut parents = HashSet::new();
     let mut still_to_check = vec![dest];
 
@@ -56,14 +56,14 @@ pub fn part1(dest: &str, graph: &DiGraphMap::<&str, i32>) -> i32 {
         }
     }
 
-    parents.len() as i32
+    parents.len() as i64
 }
 
-pub fn part2(start: &str, graph: &DiGraphMap::<&str, i32>) -> i32 {
+pub fn part2(start: &str, graph: &DiGraphMap::<&str, i64>) -> i64 {
     let mut count = 0;
 
     for edge in graph.edges(start) {
-        count += edge.2 + edge.2 * part2(edge.1, graph);
+        count += *edge.2 + *edge.2 * part2(edge.1, graph);
     }
 
     count
