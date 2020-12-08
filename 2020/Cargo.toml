@@ -14,8 +14,8 @@ fnv = "1.0"
 regex = "1"
 
 [[bin]]
-name = "day3"
-path = "src/day3.rs"
+name = "day7"
+path = "src/day7.rs"
 
 [profile.release]
 opt-level = 3
