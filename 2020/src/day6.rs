@@ -40,7 +40,6 @@ pub fn part2(groups: &Groups) -> u64 {
         }
 
         cnt += answers.iter().filter(|a| **a == persons.len()).count() as u64;
-        println!("");
     }
 
     cnt
