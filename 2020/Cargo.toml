@@ -16,8 +16,8 @@ strum = "0.20"
 strum_macros = "0.20"
 
 [[bin]]
-name = "day8"
-path = "src/day8.rs"
+name = "day9"
+path = "src/day9.rs"
 
 [profile.release]
 opt-level = 3
