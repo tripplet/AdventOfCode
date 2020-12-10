@@ -10,10 +10,20 @@ pub fn main() {
 
     let mut now = std::time::Instant::now();
     let part1_solution = part1(&numbers);
-    println!("Part1: {:?}  [{}]", part1_solution, humantime::format_duration(now.elapsed()));
+    println!(
+        "Part1: {:?}  [{}]",
+        part1_solution.0 * part1_solution.1,
+        humantime::format_duration(now.elapsed())
+    );
+
+    //assert_eq!(part1_solution, 57195069);
 
     now = std::time::Instant::now();
-    println!("Part2: {}  [{}]", part2(&numbers), humantime::format_duration(now.elapsed()));
+    println!(
+        "Part2: {}  [{}]",
+        part2(&numbers),
+        humantime::format_duration(now.elapsed())
+    );
 }
 
 pub fn parse(input: &str) -> Result<Vec<u64>, std::num::ParseIntError> {
@@ -35,7 +45,7 @@ fn get_deltas(numbers: &[u64]) -> Vec<u64> {
     deltas
 }
 
-pub fn part1(numbers: &[u64]) -> u64 {
+pub fn part1(numbers: &[u64]) -> (u64, u64) {
     let deltas = get_deltas(numbers);
 
     let mut ones = 0;
@@ -50,15 +60,15 @@ pub fn part1(numbers: &[u64]) -> u64 {
         }
     }
 
-    ones * threes
+    (ones, threes)
 }
 
 pub fn part2(numbers: &[u64]) -> BigInt {
     let deltas = get_deltas(numbers);
 
     let mut ones: Vec<u64> = Vec::new();
-    let mut cnt = 0;
 
+    let mut cnt = 0;
     for elem in &deltas {
         if *elem == 1 {
             cnt += 1;
@@ -89,4 +99,26 @@ fn binom(n: u64, k: u64) -> BigInt {
         res = (res * (n - i).to_bigint().unwrap()) / (i + 1).to_bigint().unwrap();
     }
     res
+}
+
+#[cfg(test)]
+mod test_day10 {
+    use num::ToPrimitive;
+
+    #[test]
+    fn part1() {
+        let input = include_str!("../input/2020/day10.txt").trim();
+        let numbers = super::parse(input).unwrap();
+        let part1_solution = super::part1(&numbers);
+
+        assert_eq!(part1_solution.0 * part1_solution.1, 1917);
+    }
+
+    #[test]
+    fn part2() {
+        let input = include_str!("../input/2020/day10.txt").trim();
+        let numbers = super::parse(input).unwrap();
+
+        assert_eq!(super::part2(&numbers).to_u64().unwrap(), 113387824750592);
+    }
 }

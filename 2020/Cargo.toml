@@ -15,6 +15,7 @@ regex = "1"
 strum = "0.20"
 strum_macros = "0.20"
 num = "0.3"
+cached = "0.22"
 
 [[bin]]
 name = "day10"
