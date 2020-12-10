@@ -2,7 +2,7 @@ use regex::{Regex};
 use std::collections::HashSet;
 
 use petgraph::graphmap::DiGraphMap;
-use petgraph::dot::{Dot, Config};
+//use petgraph::dot::{Dot, Config};
 use petgraph::Direction;
 
 pub fn main() {
