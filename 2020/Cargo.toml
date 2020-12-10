@@ -14,10 +14,11 @@ fnv = "1.0"
 regex = "1"
 strum = "0.20"
 strum_macros = "0.20"
+num = "0.3"
 
 [[bin]]
-name = "day9"
-path = "src/day9.rs"
+name = "day10"
+path = "src/day10.rs"
 
 [profile.release]
 opt-level = 3
