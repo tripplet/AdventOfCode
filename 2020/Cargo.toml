@@ -18,8 +18,8 @@ num = "0.3"
 cached = "0.22"
 
 [[bin]]
-name = "day10"
-path = "src/day10.rs"
+name = "day11"
+path = "src/day11.rs"
 
 [profile.release]
 opt-level = 3
