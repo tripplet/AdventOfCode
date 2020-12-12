@@ -10,20 +10,12 @@ pub fn main() {
 
     let mut now = std::time::Instant::now();
     let part1_solution = part1(&numbers);
-    println!(
-        "Part1: {:?}  [{}]",
-        part1_solution.0 * part1_solution.1,
-        humantime::format_duration(now.elapsed())
-    );
+    println!("Part1: {:?}  [{}]", part1_solution.0 * part1_solution.1, humantime::format_duration(now.elapsed()));
 
     //assert_eq!(part1_solution, 57195069);
 
     now = std::time::Instant::now();
-    println!(
-        "Part2: {}  [{}]",
-        part2(&numbers),
-        humantime::format_duration(now.elapsed())
-    );
+    println!("Part2: {}  [{}]", part2(&numbers), humantime::format_duration(now.elapsed()));
 }
 
 pub fn parse(input: &str) -> Result<Vec<u64>, std::num::ParseIntError> {
@@ -63,6 +55,7 @@ pub fn part1(numbers: &[u64]) -> (u64, u64) {
     (ones, threes)
 }
 
+// Algorithm is not correct with binomial calculation only works for sequence of ones up to 4 ones!!
 pub fn part2(numbers: &[u64]) -> BigInt {
     let deltas = get_deltas(numbers);
 
