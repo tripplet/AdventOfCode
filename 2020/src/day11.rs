@@ -31,7 +31,7 @@ pub fn run(seat_map_orig: &SeatMap, iterate_fn: fn(&mut SeatMap) -> bool) -> u64
     let mut seat_map_modified = seat_map_orig.clone();
 
     while iterate_fn(&mut seat_map_modified) { }
-    seat_map_modified.iter().fold(0, |cnt, row| cnt + row.iter().filter(|c| **c == OCCUPIED).count()) as u64
+    seat_map_modified.iter().map(|row| row.iter().filter(|c| **c == OCCUPIED).count() as u64).sum()
 }
 
 pub fn for_all_directions<'a>(mut func: Box<dyn FnMut(i32, i32) + 'a>) {
@@ -111,7 +111,7 @@ fn check_direction_occupied(seat_map: &SeatMap, start_x: usize, start_y: usize, 
         y = y + dy;
 
         if x > 0 && x < rows && y > 0 && y < columms {
-            if seat_map[x as usize][y as usize] == '.' {
+            if seat_map[x as usize][y as usize] == FLOOR {
                 continue;
             }
 
@@ -149,7 +149,7 @@ fn iteration_part2(seat_map: &mut SeatMap) -> bool {
             if seat_map[row][col] == EMPTY {
                 let mut result = true;
                 for_all_directions(Box::new(|dy, dx| {
-                    result &= !check_direction_occupied(seat_map, row, col, dx, dy, '#', ' ');
+                    result &= !check_direction_occupied(seat_map, row, col, dx, dy, OCCUPIED, ' ');
                 }));
 
                 if result { seat_map[row][col] = 'P'; }
@@ -162,7 +162,7 @@ fn iteration_part2(seat_map: &mut SeatMap) -> bool {
     // Step2
     for row in 1..rows-1 {
         for col in 1..columms-1 {
-            if seat_map[row][col] == '#' {
+            if seat_map[row][col] == OCCUPIED {
                 let mut cnt = 0;
                 for_all_directions(Box::new(|dy, dx| {
                     if check_direction_occupied(seat_map, row, col, dx, dy, OCCUPIED, 'E') {

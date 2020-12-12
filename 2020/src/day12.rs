@@ -11,7 +11,7 @@ pub struct Instruction {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Direction {
-    N, S, W, E, R, L, F, Invalid,
+    North, South, West, East, Right, Left, Forward, Invalid,
 }
 
 impl FromStr for Instruction {
@@ -20,13 +20,13 @@ impl FromStr for Instruction {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Instruction {
             direction: match s.chars().nth(0).unwrap() {
-                'N' => Direction::N,
-                'S' => Direction::S,
-                'W' => Direction::W,
-                'E' => Direction::E,
-                'R' => Direction::R,
-                'L' => Direction::L,
-                'F' => Direction::F,
+                'N' => Direction::North,
+                'S' => Direction::South,
+                'W' => Direction::West,
+                'E' => Direction::East,
+                'R' => Direction::Right,
+                'L' => Direction::Left,
+                'F' => Direction::Forward,
                 x => panic!("Invliad direction {}", x),
             },
             value: s.chars().skip(1).collect::<String>().parse::<i64>()?,
@@ -46,18 +46,18 @@ pub fn main() {
 
 pub fn part1(instructions: &Instructions) -> i64 {
     let mut pos: (i64, i64) = (0, 0);
-    let mut dir = Direction::E;
+    let mut dir = Direction::East;
 
-    let rotate = [Direction::N, Direction::E, Direction::S, Direction::W];
+    let rotate = [Direction::North, Direction::East, Direction::South, Direction::West];
 
     for instr in instructions {
-        if instr.direction == Direction::F {
+        if instr.direction == Direction::Forward {
             runstr(dir, instr.value, &mut pos)
         }
-        else if instr.direction == Direction::R ||instr.direction == Direction::L {
+        else if instr.direction == Direction::Right ||instr.direction == Direction::Left {
             let mut cur = rotate.iter().position(|d| *d == dir).unwrap() as i64;
 
-            if instr.direction == Direction::R {
+            if instr.direction == Direction::Right {
                 cur += instr.value / 90;
             }
             else {
@@ -83,16 +83,16 @@ pub fn part2(instructions: &Instructions) -> i64 {
     let mut pos: (i64, i64) = (0, 0);
 
     for instr in instructions {
-        if instr.direction == Direction::F {
+        if instr.direction == Direction::Forward {
             // Move the ship x times the waypoint values
             pos.0 += waypos.0 * instr.value;
             pos.1 += waypos.1 * instr.value;
         }
-        else if instr.direction == Direction::R ||instr.direction == Direction::L {
+        else if instr.direction == Direction::Right ||instr.direction == Direction::Left {
             // Rotate the waypoint
             let angle = match instr.direction {
-                Direction::L => ((360-instr.value) as f64).to_radians(),
-                Direction::R => (instr.value as f64).to_radians(),
+                Direction::Left => ((360-instr.value) as f64).to_radians(),
+                Direction::Right => (instr.value as f64).to_radians(),
                 _ => panic!()
             };
 
@@ -111,10 +111,10 @@ pub fn part2(instructions: &Instructions) -> i64 {
 
 fn runstr(dir: Direction, value: i64, pos: &mut (i64, i64)) {
     match dir {
-        Direction::N => { pos.1 += value; },
-        Direction::S => { pos.1 -= value; },
-        Direction::E => { pos.0 += value; },
-        Direction::W => { pos.0 -= value; },
+        Direction::North => { pos.1 += value; },
+        Direction::South => { pos.1 -= value; },
+        Direction::East => { pos.0 += value; },
+        Direction::West => { pos.0 -= value; },
         _ => panic!()
     }
 }
