@@ -39,37 +39,21 @@ pub fn part1(data: &(u64, Vec<u64>)) -> u64 {
 }
 
 pub fn part2(data: &Vec<(usize, u64)>) -> u64 {
-    let mut prev: (usize, u64) = data[0];
-
-    let mut ss = 0;
+    let mut prev = data[0].1;
+    let mut result = 0;
 
     for elem in data.iter().skip(1) {
-        // println!();
-        // println!();
-
-        // dbg!(prev);
-        // dbg!(elem);
-
-        let common = num::integer::lcm(prev.1, elem.1);
-        // dbg!(common);
-        // dbg!(ss);
-
-        //let modu = (elem.0 + prev.0) as u64;
-
         let mut mult = 0;
         for x in 1.. {
-            if ((ss + x*prev.1) + elem.0 as u64) % elem.1 == 0 as u64 {
+            if ((result + x*prev) + elem.0 as u64) % elem.1 == 0 as u64 {
                 mult = x;
                 break;
             }
         }
 
-        ss = ss + mult*prev.1;
-
-        //dbg!(mult);
-
-        prev = (elem.0 - prev.0, common);
+        result += mult*prev;
+        prev = num::integer::lcm(prev, elem.1);
     }
 
-    ss
+    result
 }
