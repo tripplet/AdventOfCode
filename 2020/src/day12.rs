@@ -91,7 +91,7 @@ pub fn part2(instructions: &Instructions) -> i64 {
         else if instr.direction == Direction::Right ||instr.direction == Direction::Left {
             // Rotate the waypoint
             let angle = match instr.direction {
-                Direction::Left => ((360-instr.value) as f64).to_radians(),
+                Direction::Left => (-instr.value as f64).to_radians(),
                 Direction::Right => (instr.value as f64).to_radians(),
                 _ => panic!()
             };

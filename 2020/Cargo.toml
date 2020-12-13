@@ -18,7 +18,7 @@ num = "0.3"
 #cached = "0.22"
 
 [[bin]]
-name = "day13"
+name = "aoc"
 path = "src/day13.rs"
 
 [profile.release]
