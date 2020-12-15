@@ -19,7 +19,7 @@ num = "0.3"
 
 [[bin]]
 name = "aoc"
-path = "src/day14.rs"
+path = "src/day15.rs"
 
 [profile.release]
 opt-level = 3
