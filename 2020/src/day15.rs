@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use fnv::FnvHashMap;
 
 fn main() {
     let data = parse(include_str!("../input/2020/day15.txt"));
@@ -26,36 +26,33 @@ fn parse(input: &str) -> Vec<u64> {
     input.trim().split(",").map(|number| number.parse().unwrap()).collect()
 }
 
-fn calc(data: &[u64], until_round: u64) -> u64 {
-    let mut numbers: HashMap<u64, (u64, u64)> = HashMap::new();
+fn calc(data: &[u64], until_round: usize) -> u64 {
+    let mut numbers = FnvHashMap::default();
 
     for turn in 0..data.len() {
         let nb = data.get(turn).unwrap();
-        numbers.insert(*nb, ((turn + 1) as u64, 0));
+        numbers.insert(*nb as usize, ((turn + 1), 0));
     }
 
-    let mut last_number_spoken = *data.last().unwrap();
+    let mut last_number_spoken = *data.last().unwrap() as usize;
 
-    for turn in data.len()+1..=(until_round as usize) {
-        if let Some(pre_turn) = numbers.get(&last_number_spoken).cloned() {
+    for turn in data.len() + 1..=until_round {
+        if let Some(pre_turn) = numbers.get(&last_number_spoken) {
             if pre_turn.1 == 0 {
                 last_number_spoken = 0;
-            }
-            else {
+            } else {
                 last_number_spoken = pre_turn.0 - pre_turn.1;
             }
-        }
-        else {
+        } else {
             last_number_spoken = 0;
         }
 
         // "Speak" number
         if let Some(last_time) = numbers.get(&last_number_spoken).cloned() {
-            numbers.insert(last_number_spoken, (turn as u64, last_time.0));
-        }
-        else {
-            numbers.insert(last_number_spoken, (turn as u64, 0));
+            numbers.insert(last_number_spoken, (turn, last_time.0));
+        } else {
+            numbers.insert(last_number_spoken, (turn, 0));
         }
     }
-    last_number_spoken
+    last_number_spoken as u64
 }
