@@ -20,29 +20,28 @@ fn main() {
     assert_eq!(part2, 1407);
 }
 
-fn parse(input: &str) -> Vec<u32> {
+fn parse(input: &str) -> Vec<usize> {
     input.trim().split(",").map(|number| number.parse().unwrap()).collect()
 }
 
-fn calc(data: &[u32], until_round: usize) -> u32 {
-    let mut numbers: Vec<(u32, u32)> = vec![(0, 0); until_round];
+fn calc(start_data: &[usize], until_round: usize) -> u32 {
+    let mut numbers = vec![0; until_round];
 
-    for turn in 0..data.len() {
-        numbers[data[turn] as usize] = ((turn + 1) as u32, 0);
-    }
+    start_data.iter().enumerate().for_each(|(turn, nb)| {
+        numbers[*nb] = (turn + 1) as u32;
+    });
 
-    let mut last_number_spoken = *data.last().unwrap();
+    let mut last_number_spoken = *start_data.last().unwrap();
 
-    for turn in data.len() + 1..=until_round {
-        let pre_turn = numbers[last_number_spoken as usize];
-        if pre_turn.1 == 0 {
+    for turn in start_data.len()..until_round {
+        let pre_turn = numbers[last_number_spoken];
+        numbers[last_number_spoken] = turn as u32;
+
+        if pre_turn == 0 {
             last_number_spoken = 0;
         } else {
-            last_number_spoken = pre_turn.0 - pre_turn.1;
+            last_number_spoken = turn - pre_turn as usize;
         }
-
-        let last_time = numbers[last_number_spoken as usize];
-        numbers[last_number_spoken as usize] = (turn as u32, last_time.0);
     }
-    last_number_spoken
+    last_number_spoken as u32
 }
