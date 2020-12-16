@@ -1,5 +1,3 @@
-use fnv::FnvHashMap;
-
 fn main() {
     let data = parse(include_str!("../input/2020/day15.txt"));
 
@@ -17,42 +15,34 @@ fn main() {
     assert_eq!(part1, 610);
 
     let now = std::time::Instant::now();
-    let part2 = calc(&data, 30000000);
-    println!("Part1: {}  [{}]", part2, humantime::format_duration(now.elapsed()));
+    let part2 = calc(&data, 30_000_000);
+    println!("Part2: {}  [{}]", part2, humantime::format_duration(now.elapsed()));
     assert_eq!(part2, 1407);
 }
 
-fn parse(input: &str) -> Vec<u64> {
+fn parse(input: &str) -> Vec<u32> {
     input.trim().split(",").map(|number| number.parse().unwrap()).collect()
 }
 
-fn calc(data: &[u64], until_round: usize) -> u64 {
-    let mut numbers = FnvHashMap::default();
+fn calc(data: &[u32], until_round: usize) -> u32 {
+    let mut numbers: Vec<(u32, u32)> = vec![(0, 0); until_round];
 
     for turn in 0..data.len() {
-        let nb = data.get(turn).unwrap();
-        numbers.insert(*nb as usize, ((turn + 1), 0));
+        numbers[data[turn] as usize] = ((turn + 1) as u32, 0);
     }
 
-    let mut last_number_spoken = *data.last().unwrap() as usize;
+    let mut last_number_spoken = *data.last().unwrap();
 
     for turn in data.len() + 1..=until_round {
-        if let Some(pre_turn) = numbers.get(&last_number_spoken) {
-            if pre_turn.1 == 0 {
-                last_number_spoken = 0;
-            } else {
-                last_number_spoken = pre_turn.0 - pre_turn.1;
-            }
-        } else {
+        let pre_turn = numbers[last_number_spoken as usize];
+        if pre_turn.1 == 0 {
             last_number_spoken = 0;
+        } else {
+            last_number_spoken = pre_turn.0 - pre_turn.1;
         }
 
-        // "Speak" number
-        if let Some(last_time) = numbers.get(&last_number_spoken).cloned() {
-            numbers.insert(last_number_spoken, (turn, last_time.0));
-        } else {
-            numbers.insert(last_number_spoken, (turn, 0));
-        }
+        let last_time = numbers[last_number_spoken as usize];
+        numbers[last_number_spoken as usize] = (turn as u32, last_time.0);
     }
-    last_number_spoken as u64
+    last_number_spoken
 }
