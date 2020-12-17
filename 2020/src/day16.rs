@@ -53,20 +53,12 @@ fn main() {
 
     let now = std::time::Instant::now();
     let part1 = part1(&data);
-    println!(
-        "Part1: {}  [{}]",
-        part1,
-        humantime::format_duration(now.elapsed())
-    );
+    println!("Part1: {}  [{}]", part1, humantime::format_duration(now.elapsed()));
     assert_eq!(part1, 26026);
 
     let now = std::time::Instant::now();
     let part2 = part2(&data);
-    println!(
-        "Part2: {}  [{}]",
-        part1,
-        humantime::format_duration(now.elapsed())
-    );
+    println!("Part2: {}  [{}]", part1, humantime::format_duration(now.elapsed()));
     assert_eq!(part2, 1305243193339);
 }
 
@@ -89,23 +81,13 @@ fn parse(input: &str) -> Result<Data, Box<dyn Error>> {
                 continue;
             }
 
-            your_ticket = Some(
-                line.trim()
-                    .split(",")
-                    .map(|nb| nb.parse().unwrap())
-                    .collect(),
-            );
+            your_ticket = Some(line.trim().split(",").map(|nb| nb.trim().parse().unwrap()).collect());
         } else if section == 2 {
             if line.trim() == "nearby tickets:" {
                 continue;
             }
 
-            nearby_tickets.push(
-                line.trim()
-                    .split(",")
-                    .map(|nb| nb.parse::<u32>().unwrap())
-                    .collect::<Vec<u32>>(),
-            );
+            nearby_tickets.push(line.trim().split(",").map(|nb| nb.parse::<u32>().unwrap()).collect::<Vec<u32>>());
         }
     }
 
@@ -157,14 +139,14 @@ fn part2(data: &Data) -> u64 {
                     .iter()
                     .enumerate()
                     .filter(move |(_, rule)| {
-                        (rule.min1 <= nb && nb <= rule.max1)
-                            || (rule.min2 <= nb && nb <= rule.max2)
+                        (rule.min1 <= nb && nb <= rule.max1) || (rule.min2 <= nb && nb <= rule.max2)
                     })
                     .map(|(idx, _)| idx)
                     .collect::<HashSet<_>>()
             })
             .collect::<Vec<_>>();
 
+        // Ugly version until fold_first is supported
         let z = x.iter().skip(1).fold(x[0].clone(), |acc, hs| {
             acc.intersection(hs).cloned().collect()
         });
@@ -175,7 +157,8 @@ fn part2(data: &Data) -> u64 {
     loop {
         let f = rule_associactions.values().filter(|s| s.len() == 1).flatten().cloned().collect::<HashSet<_>>();
 
-        for elem in rule_associactions.clone().iter().filter(|(_,v)| v.len() > 1) {
+        for elem in rule_associactions.clone().iter().filter(|(_, v)| v.len() > 1)
+        {
             rule_associactions.insert(*elem.0, rule_associactions[elem.0].difference(&f).cloned().collect());
         }
 
@@ -184,6 +167,12 @@ fn part2(data: &Data) -> u64 {
         }
     }
 
-    let result_rules = rule_associactions.iter().filter(|(_,v)| data.ranges[*v.iter().next().unwrap()].name.starts_with("departure"));
-    result_rules.map(|(k,_)| data.your_ticket[*k]).fold(1 as u64, |a,b| a as u64 * b as u64)
+    let result_rules = rule_associactions.iter().filter(|(_, v)|
+        data.ranges[*v.iter().next().unwrap()]
+            .name
+            .starts_with("departure"));
+
+    result_rules
+        .map(|(k, _)| data.your_ticket[*k])
+        .fold(1 as u64, |a, b| a as u64 * b as u64)
 }
