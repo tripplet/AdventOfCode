@@ -1,0 +1,12 @@
+aclass: 0-1 or 4-19
+row: 0-5 or 8-19
+seat: 0-13 or 16-19
+atest: 42-42 or 42-100
+
+your ticket:
+42,11,12,13,2
+
+nearby tickets:
+42,3,9,18
+42,15,1,5
+42,5,14,9
