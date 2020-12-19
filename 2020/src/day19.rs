@@ -1,22 +1,14 @@
-
-#[macro_use]
-extern crate lazy_static;
-
-use regex::Regex;
-use std::str::FromStr;
 use std::error::Error;
+use std::str::FromStr;
+use std::collections::HashMap;
 
 fn main() {
 
+    let data = parse(include_str!("../input/2020/day19.txt"));
+    dbg!(data);
 }
 
-lazy_static! {
-    static ref REGEX_RULE: Regex = Regex::new(
-        r#"(?m)^((?>(?P<r1>\d+) (?P<r2>\d+))|(?>(?P<r3>\d+) (?P<r4>\d+) \| (?P<r5>\d+) (?P<r6>\d+))|(?>"(?P<char>\w)"))$"#
-    )
-    .unwrap();
-}
-
+#[derive(Debug)]
 enum Rule {
     Character(char),
     Ref(u64),
@@ -24,75 +16,49 @@ enum Rule {
     Sub(Vec<Rule>),
 }
 
-trait ToNumber {
-    fn to_number(self) -> Option<u64>;
-}
-
-impl ToNumber for Option<regex::Match<'_>> {
-    fn to_number(self) -> Option<u64> {
-        self.and_then(|m| Some(m.as_str())).and_then(|s| s.parse::<u64>().ok())
-    }
-}
-
 impl FromStr for Rule {
     type Err = Box<dyn Error>;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if (s.contains("|")) {
-            OK(Rule::Or(Rule::from_str(s: &str)))
-        }
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        if input.contains("|") {
+            let parts = input.trim().split("|").collect::<Vec<_>>();
 
-        let rule = REGEX_RULE.captures(s);
-
-        if let Some(rule) = rule {
-            let r1 = rule.name("r1").to_number();
-            let r2 = rule.name("r2").to_number();
-            let r3 = rule.name("r3").to_number();
-            let r4 = rule.name("r4").to_number();
-            let r5 = rule.name("r5").to_number();
-            let r6 = rule.name("r6").to_number();
-
-            if let Some(ch) = rule.name("char") {
-                Ok(Rule::Character(ch.as_str().chars().nth(0).ok_or("invalid char")?))
-            }
-            else if let Some(r1) = r1 {
-                Ok(Rule::Sub(
-                    Box::new(Rule::Ref(r1)),
-                    Box::new(Rule::Ref(r2.ok_or("invalid")?)),
-                ))
-            }
-            else if let Some(r2) = rule.name("r1") {
-                Ok(Rule::Sub(
-                    Box::new(Rule::Ref(r1.as_str().parse()?)),
-                    Box::new(Rule::Ref(rule.name("r2").ok_or("invalid")?.as_str().parse()?))
-                ))
-            }
-            // else if let Some(r1) = rule.name("r3") {
-            //     Ok(Rule::Or(
-            //         Box::new(Rule::Or(r1.as_str().parse()?)),
-            //         Box::new(Rule::Ref(rule.name("r2").ok_or("invalid")?.as_str().parse()?))
-            //     ))
-            // }
-            // else {
-            //     Err("Malformed".into())
-            // }
-
-            Err("Malformed".into())
-        }
-        else {
-            Err("Malformed".into())
+            Ok(Rule::Or(
+                Box::new(Rule::from_str(parts[0].trim())?),
+                Box::new(Rule::from_str(parts[1].trim())?),
+            ))
+        } else if input.contains("\"") {
+            Ok(Rule::Character(input.trim().chars().nth(1).ok_or("invalid \"_\"")?))
+        } else {
+            input.trim()
+                .split(" ")
+                .map(|nb| nb.parse::<u64>().and_then(|nb| Ok(Rule::Ref(nb))))
+                .collect::<Result<Vec<_>, _>>()
+                .and_then(|sub_rules| Ok(Rule::Sub(sub_rules)))
+                .map_err(|e| e.into())
         }
     }
 }
 
+fn parse(input: &str) -> Result<(HashMap<u64, Rule>, Vec<Vec<char>>), Box<dyn Error>> {
+    let mut rules = HashMap::new();
+    let mut messages = vec![];
+    let mut rule_section = true;
 
-fn parse(input: &str) -> (Vec<Rule>, Vec<char>) {
-    let mut rules = vec![];
+    for line in input.trim().lines() {
+        if line.trim().is_empty() {
+            rule_section = false;
+            continue;
+        }
 
-    input.trim().lines().for_each(|line| {
-        let l = line.trim();
-
-        Rule::from_str(l);
-
-    })
+        if rule_section {
+            let split_pos = line.find(":").ok_or("missing ':' for id")?;
+            let id = line.get(0..split_pos).and_then(|nb| Some(nb.parse::<u64>())).ok_or("invalid id")?;
+            rules.insert(id?, Rule::from_str(line.get(split_pos+1..).ok_or("line too short")?)?);
+        }
+        else {
+            messages.push(line.trim().chars().collect::<Vec<_>>());
+        }
+    }
+    Ok((rules, messages))
 }
