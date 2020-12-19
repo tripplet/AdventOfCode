@@ -21,7 +21,7 @@ lazy_static = "1.4"
 
 [[bin]]
 name = "aoc"
-path = "src/day18.rs"
+path = "src/day19.rs"
 
 [profile.release]
 opt-level = 3
