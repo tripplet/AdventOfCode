@@ -2,11 +2,19 @@ use std::collections::HashSet;
 
 fn main() {
     let player_decks = parse(include_str!("../input/2020/day22.txt"));
-    dbg!(part1(&player_decks));
-    dbg!(part2(&(player_decks.0.as_slice(), player_decks.1.as_slice())));
+
+    let now = std::time::Instant::now();
+    let part1_result = part1(&player_decks);
+    println!("Part1: {}  [{}]", part1_result, humantime::format_duration(now.elapsed()));
+    assert_eq!(part1_result, 33098);
+
+    let now = std::time::Instant::now();
+    let part2_result = part2(&(player_decks.0.as_slice(), player_decks.1.as_slice())).1;
+    println!("Part2: {}  [{}]", part2_result, humantime::format_duration(now.elapsed()));
+    assert_eq!(part2_result, 35055);
 }
 
-fn part1(player_decks: &(Vec<u16>, Vec<u16>)) -> usize {
+fn part1(player_decks: &(Vec<u8>, Vec<u8>)) -> usize {
     let mut p1 = player_decks.0.clone();
     let mut p2 = player_decks.1.clone();
 
@@ -34,7 +42,7 @@ fn part1(player_decks: &(Vec<u16>, Vec<u16>)) -> usize {
         .sum()
 }
 
-fn part2(player_decks: &(&[u16], &[u16])) -> (bool, usize) {
+fn part2(player_decks: &(&[u8], &[u8])) -> (bool, usize) {
     let mut p1 = player_decks.0.to_vec();
     let mut p2 = player_decks.1.to_vec();
 
@@ -44,19 +52,13 @@ fn part2(player_decks: &(&[u16], &[u16])) -> (bool, usize) {
     while !p1.is_empty() && !&p2.is_empty() {
         let mut p1_winner = false;
 
-        if loop_prevention.contains(&(p1.clone(), p2.clone())) {
+        if !loop_prevention.insert((p1.clone(), p2.clone())) {
             // Loop rule => player 1 win
-            p1.push(p1[0]);
-            p1.push(p2[0]);
-            p1.remove(0);
-            p2.remove(0);
-            continue;
-        } else if (p1[0] as usize) < p1.len() && (p2[0] as usize) < p2.len() {
+            return (true, 0);
+        } else if  p1.len() > p1[0] as _ && p2.len() > p2[0] as _ {
             let (p1_winner_sub, _) = part2(&(&p1[1..=p1[0] as usize], &p2[1..=p2[0] as usize]));
             p1_winner = p1_winner_sub;
         } else {
-            loop_prevention.insert((p1.clone(), p2.clone()));
-
             if p1[0] > p2[0] {
                 p1_winner = true;
             }
@@ -87,14 +89,14 @@ fn part2(player_decks: &(&[u16], &[u16])) -> (bool, usize) {
     )
 }
 
-fn parse(input: &str) -> (Vec<u16>, Vec<u16>) {
+fn parse(input: &str) -> (Vec<u8>, Vec<u8>) {
     let parts = input.trim().split(":").collect::<Vec<_>>();
 
-    fn get_cards(lines: &str) -> Vec<u16> {
+    fn get_cards(lines: &str) -> Vec<u8> {
         lines
             .lines()
             .map(|line| line.trim())
-            .filter_map(|line| line.parse::<u16>().ok())
+            .filter_map(|line| line.parse::<u8>().ok())
             .collect()
     }
 
