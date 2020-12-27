@@ -1,3 +1,10 @@
+//use rayon::prelude::*;
+
+const TOP: usize = 0;
+const RIGHT: usize = 1;
+const BOTTOM: usize = 2;
+const LEFT: usize = 3;
+
 #[derive(Debug, Clone)]
 struct Tile {
     id: u16,
@@ -13,11 +20,7 @@ impl Tile {
             u16::from_str_radix(chars.iter().collect::<String>().as_str(), 2).unwrap()
         }
 
-        let map = parts[1]
-            .trim()
-            .lines()
-            .map(|line| line.trim().chars().collect::<Vec<_>>())
-            .collect::<Vec<_>>();
+        let map = parts[1].trim().lines().map(|line| line.trim().chars().collect::<Vec<_>>()).collect::<Vec<_>>();
 
         let bin_map = map
             .iter()
@@ -41,31 +44,27 @@ impl Tile {
     }
 
     fn parse(input: &str) -> Vec<Self> {
-        input.trim()
-            .replace("\r", "")
-            .split("\n\n")
-            .map(|tile_str| Tile::new(tile_str))
-            .collect()
+        input.trim().replace("\r", "").split("\n\n").map(|tile_str| Tile::new(tile_str)).collect()
     }
 
     fn rotate(&self) -> Self {
         Tile {
             id: self.id,
-            edges: [self.edges[3], self.edges[0], self.edges[1], self.edges[2]],
+            edges: [self.edges[LEFT], self.edges[TOP], self.edges[RIGHT], self.edges[BOTTOM]],
         }
     }
 
     fn mirror_vertical(&self) -> Self {
         Tile {
             id: self.id,
-            edges: [self.edges[0].reverse_bits(), self.edges[1], self.edges[2].reverse_bits(), self.edges[3]],
+            edges: [self.edges[TOP].reverse_bits(), self.edges[RIGHT], self.edges[BOTTOM].reverse_bits(), self.edges[LEFT]],
         }
     }
 
     fn mirror_horizontal(&self) -> Self {
         Tile {
             id: self.id,
-            edges: [self.edges[0], self.edges[1].reverse_bits(), self.edges[2], self.edges[3].reverse_bits()],
+            edges: [self.edges[TOP], self.edges[RIGHT].reverse_bits(), self.edges[BOTTOM], self.edges[LEFT].reverse_bits()],
         }
     }
 }
@@ -84,11 +83,23 @@ fn main() {
 
 fn part1(tiles: &Vec<Tile>) -> usize {
     let side_len = (tiles.len() as f64).sqrt().round() as usize;
+    let mut pos: Vec<Vec<&Tile>> = vec![vec![]; side_len];
 
     for idx in 0..tiles.len() {
         let potential_corner = &tiles[idx];
+        pos[0].push(potential_corner);
 
-        for idx2 in 0..tiles.len() {}
+        for idx2 in 0..tiles.len() {
+            if idx2 == idx {
+                continue;
+            }
+
+            let mut next = &tiles[idx2];
+
+            if potential_corner.edges[BOTTOM] == next.edges[TOP] {
+
+            }
+        }
     }
 
     0
