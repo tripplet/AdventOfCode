@@ -41,24 +41,50 @@ impl Tile {
     }
 
     fn parse(input: &str) -> Vec<Self> {
-        input
+        input.trim()
             .replace("\r", "")
             .split("\n\n")
             .map(|tile_str| Tile::new(tile_str))
             .collect()
     }
+
+    fn rotate(&self) -> Self {
+        Tile {
+            id: self.id,
+            edges: [self.edges[3], self.edges[0], self.edges[1], self.edges[2]],
+        }
+    }
+
+    fn mirror_vertical(&self) -> Self {
+        Tile {
+            id: self.id,
+            edges: [self.edges[0].reverse_bits(), self.edges[1], self.edges[2].reverse_bits(), self.edges[3]],
+        }
+    }
+
+    fn mirror_horizontal(&self) -> Self {
+        Tile {
+            id: self.id,
+            edges: [self.edges[0], self.edges[1].reverse_bits(), self.edges[2], self.edges[3].reverse_bits()],
+        }
+    }
 }
 
 fn main() {
-    let tiles = Tile::parse(include_str!("../input/2020/day20_example.txt"));
+    let tiles = Tile::parse(include_str!("../input/2020/day20.txt"));
 
     let now = std::time::Instant::now();
     let part1_result = part1(&tiles);
+
+    dbg!(tiles.len());
+
     println!("Part1: {}  [{}]", part1_result, humantime::format_duration(now.elapsed()));
     //assert_eq!(part1_result, 33098);
 }
 
 fn part1(tiles: &Vec<Tile>) -> usize {
+    let side_len = (tiles.len() as f64).sqrt().round() as usize;
+
     for idx in 0..tiles.len() {
         let potential_corner = &tiles[idx];
 
