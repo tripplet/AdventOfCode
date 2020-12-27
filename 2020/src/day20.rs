@@ -1,4 +1,5 @@
 //use rayon::prelude::*;
+use colored::Colorize;
 
 const TOP: usize = 0;
 const RIGHT: usize = 1;
@@ -77,7 +78,7 @@ fn main() {
 
     dbg!(tiles.len());
 
-    println!("Part1: {}  [{}]", part1_result, humantime::format_duration(now.elapsed()));
+    println!("Part1: {}  [{}]", part1_result.to_string().yellow(), humantime::format_duration(now.elapsed()).to_string().blue());
     //assert_eq!(part1_result, 33098);
 }
 
