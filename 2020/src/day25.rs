@@ -17,7 +17,7 @@ fn main() {
 fn transform(loop_size: u64, subject_num: u64) -> u64 {
     let mut value = 1;
     for _ in 0..loop_size {
-        value = (value * subject_num) % 20201227;
+        value = (value * subject_num) % 2020_12_27;
     }
     value
 }
@@ -25,7 +25,7 @@ fn transform(loop_size: u64, subject_num: u64) -> u64 {
 fn brute_force_loop_size(result: u64, subject_num: u64) -> u64 {
     let mut value = 1;
     for idx in 1.. {
-        value = (value * subject_num) % 20201227;
+        value = (value * subject_num) % 2020_12_27;
 
         if value == result {
             return idx;
