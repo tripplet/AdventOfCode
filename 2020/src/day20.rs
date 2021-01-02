@@ -148,6 +148,7 @@ fn main() {
         part1_result.to_string().yellow(),
         humantime::format_duration(now.elapsed()).to_string().blue()
     );
+    assert_eq!(part1_result, 11788777383197);
 }
 
 fn part1(tiles: &Vec<Tile>) -> usize {
