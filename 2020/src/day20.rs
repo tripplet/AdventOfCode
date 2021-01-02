@@ -22,8 +22,6 @@ struct SatPicture<'a> {
     side_len: usize,
 }
 
-const SHIFT: u8 = 6; // u16 need shift down by 6 for tiles where edges are of size 10
-
 impl std::fmt::Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -40,6 +38,7 @@ impl std::fmt::Debug for Tile {
     }
 }
 
+const SHIFT: u8 = 6; // u16 need shift down by 6 for tiles where edges are of size 10
 fn mirrored(value: u16) -> u16 { value.reverse_bits() >> SHIFT }
 
 impl Tile {
@@ -47,7 +46,10 @@ impl Tile {
         let parts = input.trim().split(":").collect::<Vec<_>>();
 
         fn from_binary(chars: &Vec<char>) -> u16 {
-            u16::from_str_radix(chars.iter().collect::<String>().as_str(), 2).unwrap()
+            u16::from_str_radix(
+                chars.iter().map(|c| if *c == '#' { '1' } else { '0' }).collect::<String>().as_str(),
+                2,
+            ).unwrap()
         }
 
         let map = parts[1]
@@ -56,19 +58,10 @@ impl Tile {
             .map(|line| line.trim().chars().collect::<Vec<_>>())
             .collect::<Vec<_>>();
 
-        let bin_map = map
-            .iter()
-            .map(|line| {
-                line.iter()
-                    .map(|c| if *c == '#' { '1' } else { '0' })
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>();
-
-        let top = from_binary(&bin_map[0]);
-        let right = from_binary(&bin_map.iter().map(|line| *line.last().unwrap()).collect());
-        let bottom = from_binary(&bin_map.last().unwrap());
-        let left = from_binary(&bin_map.iter().map(|line| line[0]).collect());
+        let top = from_binary(&map[0]);
+        let right = from_binary(&map.iter().map(|line| *line.last().unwrap()).collect());
+        let bottom = from_binary(&map.last().unwrap());
+        let left = from_binary(&map.iter().map(|line| line[0]).collect());
 
         Tile {
             id: parts[0].split(" ").nth(1).unwrap().parse().unwrap(),
@@ -124,10 +117,21 @@ impl Tile {
             new_variant = Cow::Owned(new_variant.mirror_vertical());
         }
 
-        Tile {
-            variant: var,
-            ..*new_variant
-        }
+        Tile { variant: var, ..*new_variant }
+    }
+}
+
+impl SatPicture<'_> {
+    fn next_unused_tile<'a>(&self, tiles: &'a Vec<Tile>, starting_at: usize) -> Option<&'a Tile> {
+        tiles.iter().filter(|t| !self.used_tiles.contains(&t.id)).skip(starting_at).next()
+    }
+
+    fn does_fit(&self, to_test: &Tile, (y, x): (usize, usize)) -> bool {
+        let top = self.tiles[y - 1][x].as_ref();
+        let left = self.tiles[y][x - 1].as_ref();
+
+        (top.is_none() || top.unwrap().edges[BOTTOM] == to_test.edges[TOP])
+            && (left.is_none() || left.unwrap().edges[RIGHT] == to_test.edges[LEFT])
     }
 }
 
@@ -159,8 +163,6 @@ fn part1(tiles: &Vec<Tile>) -> usize {
     let result = solve_rec((1, 1), tiles, &mut pic, 0);
 
     if result {
-        //print_pic(&pic);
-
         pic.tiles[1][1].as_ref().unwrap().id as usize
             * pic.tiles[1][side_len].as_ref().unwrap().id as usize
             * pic.tiles[side_len][1].as_ref().unwrap().id as usize
@@ -171,84 +173,46 @@ fn part1(tiles: &Vec<Tile>) -> usize {
 }
 
 fn solve_rec((y, x): (usize, usize), tiles: &Vec<Tile>, pic: &mut SatPicture, starting_at: usize, ) -> bool {
-    let mut start = starting_at;
+    let mut tiles_to_skip = starting_at;
 
-    // Loop until all tiles are placed
-    while y <= pic.side_len && x <= pic.side_len {
-        // loop over all potenital next tiles
-        loop {
-            let new_potential_tile = next_unused_tile(tiles, start, pic.used_tiles);
+    // loop over all potenital next tiles
+    loop {
+        let new_potential_tile = pic.next_unused_tile(tiles, tiles_to_skip);
 
-            if let Some(new_potential_tile) = new_potential_tile {
-                pic.used_tiles.insert(new_potential_tile.id);
+        if let Some(new_potential_tile) = new_potential_tile {
+            pic.used_tiles.insert(new_potential_tile.id);
 
-                // Try all variants of the potential tile
-                for var in 0..8 {
-                    let to_test: Cow<Tile> = Cow::Owned(new_potential_tile.variant(var));
+            // Try all variants of the potential tile
+            for var in 0..8 {
+                let to_test: Cow<Tile> = Cow::Owned(new_potential_tile.variant(var));
 
-                    if matches(pic.tiles[y - 1][x].as_ref(), pic.tiles[y][x - 1].as_ref(), &to_test) {
-                        pic.tiles[y][x] = Some(to_test);
+                if pic.does_fit(&to_test, (y, x)) {
+                    pic.tiles[y][x] = Some(to_test);
 
-                        let mut new_x = x;
-                        let new_y = if y < pic.side_len {
-                            y + 1
-                        } else {
-                            new_x += 1;
-                            1
-                        };
+                    let mut new_x = x;
+                    let new_y = if y < pic.side_len {
+                        y + 1
+                    } else {
+                        new_x += 1;
+                        1
+                    };
 
-                        if solve_rec((new_y, new_x), tiles, pic, starting_at) {
-                            return true;
-                        }
+                    // Stop recursion if all tiles are placed
+                    if new_x > pic.side_len {
+                        return true;
+                    }
+                    else if solve_rec((new_y, new_x), tiles, pic, starting_at) {
+                        return true;
                     }
                 }
-
-                // Try with next tile
-                pic.tiles[y][x] = None;
-                pic.used_tiles.remove(&new_potential_tile.id);
-                start += 1;
-            } else {
-                return false;
             }
-        }
-    }
-    true
-}
 
-fn next_unused_tile<'a>(tiles: &'a Vec<Tile>, starting_at: usize, used_tiles: &HashSet<u16>) -> Option<&'a Tile> {
-    tiles.iter().filter(|t| !used_tiles.contains(&t.id)).skip(starting_at).next()
-}
-
-fn matches(top: Option<&Cow<Tile>>, left: Option<&Cow<Tile>>, to_test: &Tile) -> bool {
-    (top.is_none() || top.unwrap().edges[BOTTOM] == to_test.edges[TOP])
-        && (left.is_none() || left.unwrap().edges[RIGHT] == to_test.edges[LEFT])
-}
-
-fn print_pic(pic: &SatPicture) {
-    for y in 1..pic.side_len {
-        for x in 1..pic.side_len {
-            if let Some(v) = pic.tiles[y][x].as_ref() {
-                print!("      {:<4}       ", v.edges[TOP]);
-            } else {
-                print!("      {:<4}       ", "-");
-            }
+            // Try with next tile
+            pic.tiles[y][x] = None;
+            pic.used_tiles.remove(&new_potential_tile.id);
+            tiles_to_skip += 1;
+        } else {
+            return false;
         }
-        println!();
-        for x in 1..pic.side_len {
-            if let Some(v) = pic.tiles[y][x].as_ref() {
-                print!("{:>4} [{:<4}] {:<4} ", v.edges[LEFT], v.id, v.edges[RIGHT]);
-            } else {
-                print!("{:>4} [{:<4}] {:<4} ", "-", 0, "-");
-            }
-        }
-        println!();
-        for x in 1..pic.side_len {
-            if let Some(v) = pic.tiles[y][x].as_ref() {
-                print!("      {:<4}       ", v.edges[BOTTOM]);
-            } else {
-                print!("      {:<4}       ", "-");
-            }
-        }
-        println!();
     }
 }
