@@ -22,7 +22,6 @@ struct SatPicture<'a> {
     side_len: usize,
 }
 
-const SHIFT: u8 = 6; // u16 need shift down by 6 for tiles where edges are of size 10
 
 impl std::fmt::Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -40,6 +39,7 @@ impl std::fmt::Debug for Tile {
     }
 }
 
+const SHIFT: u8 = 6; // u16 need shift down by 6 for tiles where edges are of size 10
 fn mirrored(value: u16) -> u16 { value.reverse_bits() >> SHIFT }
 
 impl Tile {
@@ -47,7 +47,10 @@ impl Tile {
         let parts = input.trim().split(":").collect::<Vec<_>>();
 
         fn from_binary(chars: &Vec<char>) -> u16 {
-            u16::from_str_radix(chars.iter().collect::<String>().as_str(), 2).unwrap()
+            u16::from_str_radix(
+                chars.iter().map(|c| if *c == '#' { '1' } else { '0' }).collect::<String>().as_str(),
+                2,
+            ).unwrap()
         }
 
         let map = parts[1]
@@ -56,19 +59,10 @@ impl Tile {
             .map(|line| line.trim().chars().collect::<Vec<_>>())
             .collect::<Vec<_>>();
 
-        let bin_map = map
-            .iter()
-            .map(|line| {
-                line.iter()
-                    .map(|c| if *c == '#' { '1' } else { '0' })
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>();
-
-        let top = from_binary(&bin_map[0]);
-        let right = from_binary(&bin_map.iter().map(|line| *line.last().unwrap()).collect());
-        let bottom = from_binary(&bin_map.last().unwrap());
-        let left = from_binary(&bin_map.iter().map(|line| line[0]).collect());
+        let top = from_binary(&map[0]);
+        let right = from_binary(&map.iter().map(|line| *line.last().unwrap()).collect());
+        let bottom = from_binary(&map.last().unwrap());
+        let left = from_binary(&map.iter().map(|line| line[0]).collect());
 
         Tile {
             id: parts[0].split(" ").nth(1).unwrap().parse().unwrap(),
@@ -222,33 +216,4 @@ fn next_unused_tile<'a>(tiles: &'a Vec<Tile>, starting_at: usize, used_tiles: &H
 fn matches(top: Option<&Cow<Tile>>, left: Option<&Cow<Tile>>, to_test: &Tile) -> bool {
     (top.is_none() || top.unwrap().edges[BOTTOM] == to_test.edges[TOP])
         && (left.is_none() || left.unwrap().edges[RIGHT] == to_test.edges[LEFT])
-}
-
-fn print_pic(pic: &SatPicture) {
-    for y in 1..pic.side_len {
-        for x in 1..pic.side_len {
-            if let Some(v) = pic.tiles[y][x].as_ref() {
-                print!("      {:<4}       ", v.edges[TOP]);
-            } else {
-                print!("      {:<4}       ", "-");
-            }
-        }
-        println!();
-        for x in 1..pic.side_len {
-            if let Some(v) = pic.tiles[y][x].as_ref() {
-                print!("{:>4} [{:<4}] {:<4} ", v.edges[LEFT], v.id, v.edges[RIGHT]);
-            } else {
-                print!("{:>4} [{:<4}] {:<4} ", "-", 0, "-");
-            }
-        }
-        println!();
-        for x in 1..pic.side_len {
-            if let Some(v) = pic.tiles[y][x].as_ref() {
-                print!("      {:<4}       ", v.edges[BOTTOM]);
-            } else {
-                print!("      {:<4}       ", "-");
-            }
-        }
-        println!();
-    }
 }
