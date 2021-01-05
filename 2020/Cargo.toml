@@ -20,6 +20,7 @@ numeric-array = "0.5"
 lazy_static = "1.4"
 rayon = "1.5"
 colored = "2.0"
+ndarray = "0.14"
 
 [[bin]]
 name = "aoc"

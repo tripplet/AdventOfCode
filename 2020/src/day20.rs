@@ -3,26 +3,29 @@ use colored::Colorize;
 use std::borrow::Cow;
 use std::collections::HashSet;
 
+use ndarray::Array2;
+
 const TOP: usize = 0;
 const RIGHT: usize = 1;
 const BOTTOM: usize = 2;
 const LEFT: usize = 3;
 
+struct SatPicture<'a, 'b> {
+    unsorted_tiles: &'a Vec<Tile<'a>>,
+    tiles: Vec<Vec<Option<Cow<'a, Tile<'a>>>>>,
+    used_tiles: &'b mut HashSet<u16>,
+    side_len: usize,
+}
+
 #[derive(Clone)]
-struct Tile {
+struct Tile<'a> {
     id: u16,
-    //map: Vec<Vec<char>>,
+    map: Cow<'a, Array2<char>>,
     edges: [u16; 4],
     variant: u8,
 }
 
-struct SatPicture<'a> {
-    tiles: Vec<Vec<Option<Cow<'a, Tile>>>>,
-    used_tiles: &'a mut HashSet<u16>,
-    side_len: usize,
-}
-
-impl std::fmt::Display for Tile {
+impl std::fmt::Display for Tile<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -32,7 +35,7 @@ impl std::fmt::Display for Tile {
     }
 }
 
-impl std::fmt::Debug for Tile {
+impl std::fmt::Debug for Tile<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self, f)
     }
@@ -41,7 +44,11 @@ impl std::fmt::Debug for Tile {
 const SHIFT: u8 = 6; // u16 need shift down by 6 for tiles where edges are of size 10
 fn mirrored(value: u16) -> u16 { value.reverse_bits() >> SHIFT }
 
-impl Tile {
+const SEAMONSTER: &str = r####"                  #
+#    ##    ##    ###
+ #  #  #  #  #  #   "####;
+
+impl<'a> Tile<'a> {
     fn new(input: &str) -> Self {
         let parts = input.trim().split(":").collect::<Vec<_>>();
 
@@ -65,7 +72,7 @@ impl Tile {
 
         Tile {
             id: parts[0].split(" ").nth(1).unwrap().parse().unwrap(),
-            //map: map,
+            map: Cow::Owned(Array2::from_shape_vec((map[0].len(),map.len()), map.iter().flatten().map(|c| *c).collect::<Vec<_>>()).unwrap()),
             edges: [top, right, bottom, left],
             variant: 0,
         }
@@ -80,50 +87,53 @@ impl Tile {
             .collect()
     }
 
-    fn rotate(&self) -> Self {
+    fn rotate(&'a self) -> Self {
         Tile {
             edges: [mirrored(self.edges[LEFT]), self.edges[TOP], mirrored(self.edges[RIGHT]), self.edges[BOTTOM]],
+            map: Cow::Borrowed(&self.map),
             ..*self
         }
     }
 
-    fn mirror_vertical(&self) -> Self {
+    fn mirror_vertical(&'a self) -> Self {
         Tile {
             edges: [mirrored(self.edges[TOP]), self.edges[LEFT], mirrored(self.edges[BOTTOM]), self.edges[RIGHT]],
+            map: Cow::Borrowed(&self.map),
             ..*self
         }
     }
 
-    fn mirror_horizontal(&self) -> Self {
+    fn mirror_horizontal(&'a self) -> Self {
         Tile {
             edges: [self.edges[BOTTOM], mirrored(self.edges[RIGHT]), self.edges[TOP], mirrored(self.edges[LEFT])],
+            map: Cow::Borrowed(&self.map),
             ..*self
         }
     }
 
-    fn variant(&self, var: u8) -> Self {
-        let mut new_variant = Cow::Borrowed(self);
-        let modulo_4 = var % 4;
+    fn variant(&'a self, var: u8) -> Self {
+        // let mut new_variant = Cow::Owned(self);
+        // let modulo_4 = var % 4;
 
-        if var >= 4 {
-            new_variant = Cow::Owned(new_variant.rotate());
-        }
+        // if var >= 4 {
+        //     new_variant = Cow::Owned(new_variant.rotate());
+        // }
 
-        if modulo_4 == 1 || modulo_4 == 3 {
-            new_variant = Cow::Owned(new_variant.mirror_horizontal());
-        }
+        // if modulo_4 == 1 || modulo_4 == 3 {
+        //     new_variant = Cow::Owned(new_variant.mirror_horizontal());
+        // }
 
-        if modulo_4 == 2 || modulo_4 == 3 {
-            new_variant = Cow::Owned(new_variant.mirror_vertical());
-        }
+        // if modulo_4 == 2 || modulo_4 == 3 {
+        //     new_variant = Cow::Owned(new_variant.mirror_vertical());
+        // }
 
-        Tile { variant: var, ..*new_variant }
+        Tile { variant: var, map:  Cow::Borrowed(&self.map), ..*self }
     }
 }
 
-impl SatPicture<'_> {
-    fn next_unused_tile<'a>(&self, tiles: &'a Vec<Tile>, starting_at: usize) -> Option<&'a Tile> {
-        tiles.iter().filter(|t| !self.used_tiles.contains(&t.id)).skip(starting_at).next()
+impl<'a> SatPicture<'a, '_> {
+    fn next_unused_tile(&self, starting_at: usize) -> Option<&'a Tile> {
+        self.unsorted_tiles.iter().filter(|t| !self.used_tiles.contains(&t.id)).skip(starting_at).next()
     }
 
     fn does_fit(&self, to_test: &Tile, (y, x): (usize, usize)) -> bool {
@@ -143,6 +153,8 @@ fn main() {
     let now = std::time::Instant::now();
     let part1_result = part1(&tiles);
 
+    dbg!(&tiles[0].map);
+
     println!(
         "Part1: {}  [{}]",
         part1_result.to_string().yellow(),
@@ -156,12 +168,13 @@ fn part1(tiles: &Vec<Tile>) -> usize {
 
     // start at 1,1 easier bounds checking
     let mut pic = SatPicture {
+        unsorted_tiles: tiles,
         tiles: vec![vec![None; side_len + 2]; side_len + 2],
         side_len: side_len,
         used_tiles: &mut HashSet::with_capacity(tiles.len())
     };
 
-    let result = solve_rec((1, 1), tiles, &mut pic, 0);
+    let result = solve_rec((1, 1), &mut pic, 0);
 
     if result {
         pic.tiles[1][1].as_ref().unwrap().id as usize
@@ -173,12 +186,12 @@ fn part1(tiles: &Vec<Tile>) -> usize {
     }
 }
 
-fn solve_rec((y, x): (usize, usize), tiles: &Vec<Tile>, pic: &mut SatPicture, starting_at: usize, ) -> bool {
+fn solve_rec((y, x): (usize, usize), pic: &mut SatPicture, starting_at: usize) -> bool {
     let mut tiles_to_skip = starting_at;
 
     // loop over all potenital next tiles
     loop {
-        let new_potential_tile = pic.next_unused_tile(tiles, tiles_to_skip);
+        let new_potential_tile = pic.next_unused_tile(tiles_to_skip);
 
         if let Some(new_potential_tile) = new_potential_tile {
             pic.used_tiles.insert(new_potential_tile.id);
@@ -202,7 +215,7 @@ fn solve_rec((y, x): (usize, usize), tiles: &Vec<Tile>, pic: &mut SatPicture, st
                     if new_x > pic.side_len {
                         return true;
                     }
-                    else if solve_rec((new_y, new_x), tiles, pic, starting_at) {
+                    else if solve_rec((new_y, new_x), pic, starting_at) {
                         return true;
                     }
                 }
@@ -216,4 +229,5 @@ fn solve_rec((y, x): (usize, usize), tiles: &Vec<Tile>, pic: &mut SatPicture, st
             return false;
         }
     }
+    false
 }
