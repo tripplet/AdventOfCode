@@ -328,14 +328,8 @@ fn solve_rec((y, x): (usize, usize), pic: &mut SatPicture, starting_at: usize) -
 
     // loop over all potenital next tiles
     loop {
-        let new_potential_tile_2 = pic.next_unused_tile(tiles_to_skip);
-
-        if let Some(new_potential_tile_2) = new_potential_tile_2 {
-            let new_potential_tile = Tile {
-                variant: new_potential_tile_2.variant,
-                map: new_potential_tile_2.map.clone(),
-                ..*new_potential_tile_2
-            };
+        if let Some(new_potential_tile) = pic.next_unused_tile(tiles_to_skip) {
+            let new_potential_tile = new_potential_tile.clone();
             pic.used_tiles.insert(new_potential_tile.id);
 
             // Try all variants of the potential tile

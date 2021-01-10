@@ -50,18 +50,17 @@ fn parse(input: &str) -> Vec<Food> {
 fn get_safe_ingredients<'a>(food_list: &'a [Food]) -> Vec<&'a str> {
     let allergen_dict = build_allergen_dict(food_list);
 
-    let all_ingredients = food_list.iter().fold(HashSet::default(), |all, cur| {
+    let all_ingredients = food_list.into_iter().fold(HashSet::default(), |all, cur| {
         all.union(&cur.ingredients).cloned().collect()
     });
 
     all_ingredients
-        .iter()
+        .into_iter()
         .filter(|ingredient| {
             !allergen_dict
                 .values()
-                .any(|ingredient_with_allergen| ingredient_with_allergen == *ingredient)
+                .any(|ingredient_with_allergen| ingredient_with_allergen == ingredient)
         })
-        .map(|s| *s)
         .collect::<Vec<_>>()
 }
 
@@ -71,7 +70,7 @@ fn build_allergen_dict<'a>(food_list: &'a [Food]) -> HashMap<&'a str, &'a str> {
     });
 
     let mut allergen_dict = all_allergens
-        .iter()
+        .into_iter()
         .map(|cur_allergen| {
             let all_foods_with_this_allergen = food_list
                 .iter()
@@ -84,7 +83,7 @@ fn build_allergen_dict<'a>(food_list: &'a [Food]) -> HashMap<&'a str, &'a str> {
                 .fold(all_foods_with_this_allergen[0].ingredients.clone(), |all, cur| {
                     all.intersection(&cur.ingredients).cloned().collect()
                 });
-            (*cur_allergen, common_ingredients)
+            (cur_allergen, common_ingredients)
         })
         .collect::<HashMap<_, _>>();
 
@@ -109,18 +108,18 @@ fn build_allergen_dict<'a>(food_list: &'a [Food]) -> HashMap<&'a str, &'a str> {
     }
 
     allergen_dict
-        .iter()
-        .map(|(k, v)| (*k, *v.iter().next().unwrap()))
+        .into_iter()
+        .map(|(k, v)| (k, *v.iter().next().unwrap()))
         .collect::<HashMap<_, _>>()
 }
 
 fn part1(food_list: &[Food]) -> usize {
     get_safe_ingredients(food_list)
-        .iter()
+        .into_iter()
         .map(|safe_ingredient| {
             food_list
                 .iter()
-                .filter(|food| food.ingredients.contains(*safe_ingredient))
+                .filter(|food| food.ingredients.contains(safe_ingredient))
                 .count()
         })
         .sum()
@@ -128,15 +127,15 @@ fn part1(food_list: &[Food]) -> usize {
 
 fn part2(food_list: &[Food]) -> String {
     let mut dangerous_ingredients = build_allergen_dict(food_list)
-        .iter()
-        .map(|(allergen, ingredient)| (*allergen, *ingredient))
+        .iter().to_owned()
+        .map(|(&allergen, &ingredient)| (allergen, ingredient))
         .collect::<Vec<_>>();
 
     dangerous_ingredients.sort_unstable_by_key(|(allergen, _)| allergen.clone());
 
     dangerous_ingredients
-        .iter()
-        .map(|(_, ingredient)| *ingredient)
+        .into_iter()
+        .map(|(_, ingredient)| ingredient)
         .collect::<Vec<_>>()
         .join(",")
         .to_string()
