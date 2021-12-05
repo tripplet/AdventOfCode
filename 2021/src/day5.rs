@@ -1,23 +1,30 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::cmp;
 use std::error::Error;
 use std::str::FromStr;
 
-#[macro_use]
-extern crate lazy_static;
-
 lazy_static! {
-    static ref REGEX_LINES: Regex =
-        Regex::new(r"(?P<x1>[\d]+),(?P<y1>[\d]+)\s*->\s*(?P<x2>[\d]+),(?P<y2>[\d]+)").unwrap();
+    static ref REGEX_LINES: Regex = Regex::new(r"(?P<x1>\d+),(?P<y1>\d+) -> (?P<x2>\d+),(?P<y2>\d+)").unwrap();
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Line {
     x1: u16,
     y1: u16,
     x2: u16,
     y2: u16,
 }
+
+pub fn main() {
+    let lines = parse_input(include_str!("../input/2021/day5.txt")).unwrap();
+
+    println!("Part1: {}", part1(&lines));
+    println!("Part2: {}", part2(&lines));
+}
+
+fn part1(lines: &[Line]) -> usize { solve(lines, false) }
+fn part2(lines: &[Line]) -> usize { solve(lines, true) }
 
 impl FromStr for Line {
     type Err = Box<dyn Error>;
@@ -41,22 +48,7 @@ impl Line {
     fn is_horizontal(&self) -> bool { self.y1 == self.y2 }
 }
 
-pub fn main() {
-    let lines = parse_input(include_str!("../input/2021/day5.txt")).unwrap();
-
-    println!("Part1: {}", part1(&lines));
-    println!("Part2: {}", part2(&lines));
-}
-
-fn part1(lines: &[Line]) -> usize {
-    solve(lines, false)
-}
-
-fn part2(lines: &[Line]) -> usize {
-    solve(lines, true)
-}
-
-fn solve(lines: &[Line], allow_diagonal: bool) -> usize {
+fn solve(lines: &[Line], use_diagonals: bool) -> usize {
     // get map boundaries
     let mut max_x = 0;
     let mut max_y = 0;
@@ -66,7 +58,7 @@ fn solve(lines: &[Line], allow_diagonal: bool) -> usize {
         max_y = cmp::max(max_y, cmp::max(line.y1, line.y2));
     }
 
-    let mut map: std::vec::Vec<std::vec::Vec<u16>> =
+    let mut map: Vec<Vec<u16>> =
         vec![vec![0; (max_x + 1) as usize]; (max_y + 1) as usize];
 
     for line in lines {
@@ -78,7 +70,7 @@ fn solve(lines: &[Line], allow_diagonal: bool) -> usize {
             for y in cmp::min(line.y1, line.y2)..=cmp::max(line.y1, line.y2) {
                 map[y as usize][line.x1 as usize] += 1;
             }
-        } else if allow_diagonal {
+        } else if use_diagonals {
             let dx: i16 = if line.x1 < line.x2 { 1 } else { -1 };
             let dy: i16 = if line.y1 < line.y2 { 1 } else { -1 };
             let mut x = line.x1 as i16;
@@ -90,26 +82,18 @@ fn solve(lines: &[Line], allow_diagonal: bool) -> usize {
                 y += dy;
                 if x as u16 == line.x2 {
                     map[y as usize][x as usize] += 1;
-                    break
+                    break;
                 }
             }
         }
     }
 
-    map.iter().for_each(|it| {
-        it.iter().for_each(|&v| print!("{}", v));
-        println!();
-    });
-
-    let mut crossings = 0;
-    for row in map {
-        for v in row {
-            if v > 1 {
-                crossings += 1;
-            }
-        }
-    }
-    crossings
+    map.iter()
+        .map(|row| {
+            row.iter()
+                .fold(0, |acc, v| if *v > 1 { acc + 1 } else { acc })
+        })
+        .sum()
 }
 
 fn parse_input(input: &str) -> Result<Vec<Line>, Box<dyn Error>> {
@@ -126,12 +110,18 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(5, part1(&parse_input(include_str!("../input/2021/day5_example.txt")).unwrap()));
+        assert_eq!(
+            5,
+            part1(&parse_input(include_str!("../input/2021/day5_example.txt")).unwrap())
+        );
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(12, part2(&parse_input(include_str!("../input/2021/day5_example.txt")).unwrap()));
+        assert_eq!(
+            12,
+            part2(&parse_input(include_str!("../input/2021/day5_example.txt")).unwrap())
+        );
     }
 
     #[test]
@@ -139,18 +129,8 @@ mod tests {
         let lines = parse_input("1,2 -> 3,4\n5,6 -> 7,8").unwrap();
         assert_eq!(
             vec![
-                Line {
-                    x1: 1,
-                    y1: 2,
-                    x2: 3,
-                    y2: 4
-                },
-                Line {
-                    x1: 5,
-                    y1: 6,
-                    x2: 7,
-                    y2: 8
-                }
+                Line {x1: 1, y1: 2, x2: 3, y2: 4},
+                Line {x1: 5, y1: 6, x2: 7, y2: 8}
             ],
             lines
         );
