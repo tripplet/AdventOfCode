@@ -2,7 +2,7 @@
 name = "adventofcode"
 version = "0.1.0"
 authors = ["Tobias Tangemann <tobias@tangemann.org>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 #aoc-runner = "0.3"
@@ -24,7 +24,7 @@ humantime = "2.0"
 
 [[bin]]
 name = "aoc"
-path = "src/day1.rs"
+path = "src/day4.rs"
 
 [profile.release]
 opt-level = 3
