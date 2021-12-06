@@ -13,12 +13,8 @@ fn part1(fish: &[i8]) -> usize { calculate_generations(fish, 80) }
 fn part2(fish: &[i8]) -> usize { calculate_generations(fish, 256) }
 
 fn calculate_generations(fish_timers: &[i8], days: u16) -> usize {
-    let fish_timers = fish_timers.clone().to_vec();
-
     let mut fish_counter = [0; 9];
-    fish_timers
-        .iter()
-        .for_each(|&f| fish_counter[f as usize] += 1);
+    fish_timers.iter().for_each(|&f| fish_counter[f as usize] += 1);
 
     for _ in 0..days {
         fish_counter.rotate_left(1);
