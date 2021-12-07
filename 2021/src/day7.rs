@@ -19,10 +19,13 @@ fn part1(submariens: &[u16]) -> usize {
 }
 
 fn part2(submariens: &[u16]) -> usize {
-    let average = submariens.amean().unwrap().round() as isize;
-    dbg!(submariens.amean().unwrap());
+    let average = submariens.amean().unwrap().floor() as u16;
+    std::cmp::min(calc(submariens, average), calc(submariens, average + 1))
+}
+
+fn calc(submariens: &[u16], target_pos: u16) -> usize {
     submariens.iter().fold(0, |sum, &pos| {
-        let distance = (average - (pos as isize)).abs() as f64;
+        let distance = (target_pos as isize - (pos as isize)).abs() as f64;
         // Sum of consecutive numbers
         let fuel = ((distance / 2.0) * (1.0 + distance)) as usize;
         sum + fuel
