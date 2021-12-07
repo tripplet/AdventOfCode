@@ -14,7 +14,8 @@ humantime = "2.0"
 regex = "1"
 #strum = "0.20"
 #strum_macros = "0.20"
-#num = "0.3"
+#num = "0.4"
+rstats = "0.9"
 ##cached = "0.22"
 #numeric-array = "0.5"
 lazy_static = "1.4"
@@ -24,7 +25,7 @@ lazy_static = "1.4"
 
 [[bin]]
 name = "aoc"
-path = "src/day6.rs"
+path = "src/day7.rs"
 
 [profile.release]
 opt-level = 3
