@@ -1,9 +1,13 @@
-use std::error::Error;
+use itertools::Itertools;
 
 const INPUT: &str = include_str!("../input/2021/day9.txt");
 const EXAMPLE: &str = include_str!("../input/2021/day9_example.txt");
 
 type Data = Vec<Vec<u8>>;
+
+struct Map {
+    data: Vec<Vec<u8>>
+}
 
 pub fn main() {
     let data = parse_input(INPUT);
@@ -21,10 +25,14 @@ fn parse_input(input: &str) -> Data {
 }
 
 fn part1(data: &Data) -> usize {
+    find_low_points(data).iter().fold(0, |sum, p| sum + 1 + data[p.0][p.1] as usize)
+}
+
+fn find_low_points(data: &Data) -> Vec<(usize, usize)> {
     let leny = data.len() as isize;
     let lenx = data[0].len() as isize;
 
-    let mut sum = 0;
+    let mut low_points = vec![];
 
     for y in 0..leny as usize {
         for x in 0..lenx as usize {
@@ -36,13 +44,54 @@ fn part1(data: &Data) -> usize {
             ];
 
             if adjescent.iter().filter_map(|x| *x).all(|adj| adj > data[y][x]) {
-                sum += data[y][x] as usize + 1;
+                low_points.push((y, x));
             }
         }
     }
-    sum
+    low_points
 }
 
+fn part2(data: &Data) -> usize {
+    let leny = data.len() as isize;
+    let lenx = data[0].len() as isize;
+    let low_points = find_low_points(data);
+
+    let mut bassin_sizes = vec![];
+
+    for p in low_points {
+        let mut bassin = vec![p];
+
+        let mut new_points = vec![p];
+        loop {
+            if new_points.len() == 0 {
+                break
+            }
+
+            let cur = new_points.pop().unwrap();
+
+            let adjescent = [
+                if cur.0 as isize - 1 >= 0 {Some((cur.0-1, cur.1))} else { None },
+                if cur.0 as isize + 1 < leny {Some((cur.0+1, cur.1))} else { None },
+                if cur.1 as isize - 1 >= 0 {Some((cur.0, cur.1-1))} else { None },
+                if cur.1 as isize + 1 < lenx {Some((cur.0, cur.1+1))} else { None },
+            ];
+
+            let mut newnew: Vec<_> = adjescent.iter().filter_map(|p| *p).filter(|p| !new_points.contains(p) && !bassin.contains(p) && data[p.0][p.1] != 9).collect();
+
+            for elem in newnew.iter() {
+                if !bassin.contains(elem) {
+                    bassin.push(*elem);
+                }
+            }
+
+            new_points.append(&mut newnew);
+        }
+
+        bassin_sizes.push(bassin.len());
+    }
+
+    bassin_sizes.iter().sorted().rev().take(3).product()
+}
 // fn part2(data: ) -> usize {
 
 // }
