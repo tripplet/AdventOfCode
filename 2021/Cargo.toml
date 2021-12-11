@@ -21,11 +21,11 @@ rstats = "0.9"
 lazy_static = "1.4"
 #rayon = "1.5"
 #colored = "2.0"
-#ndarray = "0.15"
+ndarray = "0.15"
 
 [[bin]]
 name = "aoc"
-path = "src/day10.rs"
+path = "src/day11.rs"
 
 [profile.release]
 opt-level = 3
