@@ -1,6 +1,7 @@
-const INPUT: &str = include_str!("../input/2021/day11.txt");
-
+use itertools::iproduct;
 use ndarray::{Array, Array2, Ix2};
+
+const INPUT: &str = include_str!("../input/2021/day11.txt");
 
 type Data = Array2<u8>;
 
@@ -22,8 +23,7 @@ fn parse_input(input: &str) -> Data {
         })
         .collect();
 
-    let shape = (input_data.len(), input_data[0].len());
-    Array2::from_shape_vec(shape, input_data.iter().flatten().cloned().collect()).unwrap()
+    Array2::from_shape_vec((input_data.len(), input_data[0].len()), input_data.iter().flatten().cloned().collect()).unwrap()
 }
 
 fn flash(y: usize, x: usize, octo: &mut Data, flashed: &mut Array2<bool>) {
@@ -55,10 +55,7 @@ fn part2(input_data: &Data) -> usize {
 
 fn solve(input_data: &Data, part2: bool) -> usize {
     let mut octo = input_data.clone();
-    let mut flashed = Array::from_elem(octo.shape(), false)
-        .into_dimensionality::<Ix2>()
-        .unwrap();
-
+    let mut flashed = Array::from_elem(octo.shape(), false).into_dimensionality::<Ix2>().unwrap();
     let mut flash_count = 0;
 
     let it: Box<dyn Iterator<Item = usize>> = if part2 {
@@ -71,17 +68,14 @@ fn solve(input_data: &Data, part2: bool) -> usize {
         flashed.fill(false);
         octo += 1;
 
-        let mut any_flash;
         loop {
-            any_flash = false;
+            let mut any_flash = false;
 
-            for y in 0..octo.shape()[0] {
-                for x in 0..octo.shape()[1] {
-                    if octo[[y, x]] > 9 && !flashed[[y, x]] {
-                        flash(y, x, &mut octo, &mut flashed);
-                        any_flash = true;
-                        flash_count += 1;
-                    }
+            for (y, x) in iproduct!(0..octo.shape()[0], 0..octo.shape()[1]) {
+                if octo[[y, x]] > 9 && !flashed[[y, x]] {
+                    flash(y, x, &mut octo, &mut flashed);
+                    any_flash = true;
+                    flash_count += 1;
                 }
             }
 
@@ -106,22 +100,14 @@ mod tests {
     const EXAMPLE: &str = include_str!("../input/2021/day11_example.txt");
 
     #[test]
-    fn part1_example() {
-        assert_eq!(1656, part1(&parse_input(EXAMPLE)));
-    }
+    fn part1_example() { assert_eq!(1656, part1(&parse_input(EXAMPLE))); }
 
     #[test]
-    fn part2_example() {
-        assert_eq!(195, part2(&parse_input(EXAMPLE)));
-    }
+    fn part2_example() { assert_eq!(195, part2(&parse_input(EXAMPLE))); }
 
     #[test]
-    fn part1_on_input() {
-        assert_eq!(1694, part1(&parse_input(INPUT)));
-    }
+    fn part1_on_input() { assert_eq!(1694, part1(&parse_input(INPUT))); }
 
     #[test]
-    fn part2_on_input() {
-        assert_eq!(346, part2(&parse_input(INPUT)));
-    }
+    fn part2_on_input() { assert_eq!(346, part2(&parse_input(INPUT))); }
 }
