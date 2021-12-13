@@ -25,7 +25,7 @@ ndarray = "0.15"
 
 [[bin]]
 name = "aoc"
-path = "src/day12.rs"
+path = "src/day13.rs"
 
 [profile.release]
 opt-level = 3
