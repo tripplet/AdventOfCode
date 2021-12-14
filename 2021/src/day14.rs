@@ -1,35 +1,37 @@
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::error::Error;
 use std::str::FromStr;
 
 const INPUT: &str = include_str!("../input/2021/day14.txt");
-const EXAMPLE: &str = include_str!("../input/2021/day14_example.txt");
+
+type RuleInput = (char, char);
+type RulesCounter = HashMap<RuleInput, (usize, usize)>;
+type Rules = HashMap<RuleInput, char>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 struct Polymer {
     polymer: Vec<char>,
-    rules: HashMap<(char, char), char>,
+    rules: Rules,
 }
 
 impl FromStr for Polymer {
-    type Err = Box<dyn Error>;
+    type Err = String;
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let lines = input.trim().replace("\r", "");
         let mut parts = lines.split("\n\n");
 
         let polymer: Vec<_> = parts.next().ok_or("missing start polymer")?.chars().collect();
-        let mut rules: HashMap<(char, char), char> = HashMap::new();
+        let mut rules: Rules = HashMap::new();
 
         for rule in parts.next().ok_or("missing insertion rules")?.lines() {
             let mut parts = rule.split(" -> ");
             let mut in_chars = parts.next().ok_or("missing inputs")?.chars();
-            let a = in_chars.next().ok_or("missing char1")?;
-            let b = in_chars.next().ok_or("missing char2")?;
+            let in_char1 = in_chars.next().ok_or("missing char1")?;
+            let in_char2 = in_chars.next().ok_or("missing char2")?;
 
             rules.insert(
-                (a, b),
+                (in_char1, in_char2),
                 parts
                     .next()
                     .ok_or("missing second part of insertion rule")?
@@ -56,119 +58,95 @@ impl Polymer {
         }
     }
 
-    fn clever_polymerization(&self, iterations: usize) -> HashMap<char, usize> {
-        let mut rule_counter: HashMap<(char, char), (usize, usize)> = HashMap::new();
+    fn get_rule<'a>(counter: &'a mut RulesCounter, rule: &RuleInput) -> &'a mut (usize, usize) {
+        counter
+            .get_mut(rule)
+            .expect(format!("missing rule for {}{} ->", rule.0, rule.1).as_str())
+    }
 
+    fn clever_polymerization(&self, iterations: usize) -> HashMap<char, usize> {
+        let mut rule_counter: RulesCounter = HashMap::new();
         rule_counter.extend(self.rules.iter().map(|(&key, _)| (key, (0_usize, 0_usize))));
 
         // Init
         self.polymer.windows(2).for_each(|x| {
-            let (ref mut old, ref mut new) = rule_counter.get_mut(&(x[0], x[1])).unwrap();
+            let (ref mut old, _) = Polymer::get_rule(&mut rule_counter, &(x[0], x[1]));
             *old += 1;
-            //*val2 += 1;
         });
 
         let pairs = rule_counter.keys().cloned().collect::<Vec<_>>();
-        //dbg!(&rule_counter);
-        //dbg!(&pairs);
-
         let mut counts: HashMap<char, usize> = self.polymer.iter().cloned().counts();
-        //dbg!(&counts);
 
-
-        for idx in 0..iterations {
-            //println!();
-            //println!();
-            //println!("{} ##############", idx + 1);
-            print_counts(&rule_counter);
-
+        for _ in 0..iterations {
             for k in &pairs {
                 let new_char = self.rules[&k];
-                //println!("-----------");
-                //println!("Checking {}{} -> {}", k.0, k.1, new_char);
-                ////dbg!(&k);
-                ////dbg!(new_char);
 
-                let (ref cur_old, ref mut cur_new) = rule_counter.get_mut(&k).unwrap();
-
-                ////dbg!((&cur_old, &cur_new));
+                let (ref cur_old, _) = Polymer::get_rule(&mut rule_counter, &k);
                 if *cur_old == 0 {
-                    //println!("skipping");
                     continue;
                 }
 
-                let x = *cur_old;
+                let old_copy = *cur_old;
+                *(counts.entry(new_char).or_default()) += old_copy;
 
-                *(counts.entry(new_char).or_default()) += x;
+                let (_, ref mut left_new) = Polymer::get_rule(&mut rule_counter, &(k.0, new_char));
+                *left_new += old_copy;
 
-                let (ref mut left_old, ref mut left_new) = rule_counter.get_mut(&(k.0, new_char)).unwrap();
-                *left_new += x;
+                let (_, ref mut right_new) = Polymer::get_rule(&mut rule_counter, &(new_char, k.1));
+                *right_new += old_copy;
 
-                let (ref mut right_old, ref mut right_new) = rule_counter.get_mut(&(new_char, k.1)).unwrap();
-                *right_new += x;
-
-                print_counts(&rule_counter);
-                //dbg!(&counts);
+                //print_counts(&rule_counter);
             }
 
             for k in &pairs {
-                let (ref mut old, ref mut new) = rule_counter.get_mut(&k).unwrap();
+                let (ref mut old, ref mut new) = Polymer::get_rule(&mut rule_counter, &k);
                 *old = *new;
                 *new = 0;
             }
         }
         counts
     }
-
 }
 
-
-fn print_counts(counter: &HashMap<(char, char), (usize, usize)>) {
-    //println!("++++");
+#[allow(dead_code)]
+fn print_counts(counter: RulesCounter) {
     for (k, v) in counter {
-        //if v.0 > 0 || v.1 > 0 {
-            //println!("{}{}: old:{}, new:{}", &k.0, &k.1, v.0, v.1);
-        //}
+        if v.0 > 0 || v.1 > 0 {
+            println!("{}{}: old:{}, new:{}", &k.0, &k.1, v.0, v.1);
+        }
     }
-    //println!("++++");
 }
 
 pub fn main() {
+    let mut now = std::time::Instant::now();
     let polymer = INPUT.parse::<Polymer>().unwrap();
+    println!("Parsing [{}]\n", humantime::format_duration(now.elapsed()));
 
-    println!("Part1: {}", part1(&polymer));
-    println!("Part2:\n{}", part2(&polymer));
+    now = std::time::Instant::now();
+    println!("Part1: {} [{}]", part1(&polymer), humantime::format_duration(now.elapsed()));
+
+    now = std::time::Instant::now();
+    println!("Part2: {} [{}]", part2(&polymer), humantime::format_duration(now.elapsed()));
 }
 
 fn part1(polymer: &Polymer) -> usize {
     let mut polymer = polymer.clone();
 
-    for idx in 0..10 {
+    for _ in 0..10 {
         polymer.full_polymerization();
     }
 
     let counts = polymer.polymer.iter().counts();
-
-    //dbg!(&counts);
-
     let least = counts.values().min().unwrap();
     let most = counts.values().max().unwrap();
-
     most - least
 }
 
 fn part2(polymer: &Polymer) -> usize {
-    let mut polymer = polymer.clone();
-
-    //println!("{}", polymer.polymer.iter().collect::<String>());
-    //for idx in 0..10 {
     let result = polymer.clever_polymerization(40);
-    ////println!("idx: {}", polymer.polymer.iter().collect::<String>())
-    //}
 
     let least = result.values().min().unwrap();
     let most = result.values().max().unwrap();
-
     most - least
 }
 
@@ -189,28 +167,44 @@ mod tests {
     }
 
     #[test]
-    fn debug1() {
-        let polymer = EXAMPLE.parse::<Polymer>().unwrap();
+    fn check_missing_rule() {
+        let input = "NNB\n\nNN -> N\nNB -> B";
+        let polymer = input.parse::<Polymer>().unwrap();
+        let result = std::panic::catch_unwind(|| polymer.clever_polymerization(1));
 
-        let r1 = r"NCNBCHB".chars().counts();
-        assert_eq!(r1, polymer.clever_polymerization(1));
-
-        let r2 = r"NBCCNBBBCBHCB".chars().counts();
-        assert_eq!(r2, polymer.clever_polymerization(2));
-
-        let r3 = r"NBBBCNCCNBBNBNBBCHBHHBCHB".chars().counts();
-        assert_eq!(r3, polymer.clever_polymerization(3));
-
-        let r4 = r"NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB".chars().counts();
-        assert_eq!(r4, polymer.clever_polymerization(4));
+        assert!(result
+            .unwrap_err()
+            .downcast_ref::<String>()
+            .unwrap()
+            .contains("missing rule"));
     }
 
     #[test]
-    fn debug2() {
-        let p = "NNNNB\n\nNN -> N\nNB -> B\nBB -> N\nNB -> N"
-            .parse::<Polymer>()
-            .unwrap();
+    fn custom_polymer() {
+        let input = "NNB\n\nNN -> N\nNB -> N";
+        let polymer = input.parse::<Polymer>().unwrap();
+        assert_eq!(HashMap::from([('N', 8), ('B', 1),]), polymer.clever_polymerization(2));
+    }
 
-        p.clever_polymerization(2);
+    #[test]
+    fn part2_example() {
+        let polymer = EXAMPLE.parse::<Polymer>().unwrap();
+
+        let expected = r"NCNBCHB".chars().counts();
+        assert_eq!(expected, polymer.clever_polymerization(1));
+
+        let expected = r"NBCCNBBBCBHCB".chars().counts();
+        assert_eq!(expected, polymer.clever_polymerization(2));
+
+        let expected = r"NBBBCNCCNBBNBNBBCHBHHBCHB".chars().counts();
+        assert_eq!(expected, polymer.clever_polymerization(3));
+
+        let expected = r"NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB".chars().counts();
+        assert_eq!(expected, polymer.clever_polymerization(4));
+    }
+
+    #[test]
+    fn part2_on_input() {
+        assert_eq!(2437698971143, part2(&INPUT.parse().unwrap()));
     }
 }
