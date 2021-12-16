@@ -7,6 +7,8 @@ edition = "2021"
 [dependencies]
 #aoc-runner = "0.3"
 #aoc-runner-derive = "0.3"
+bitvec = "0.22"
+enum-primitive-derive = "0.2"
 itertools = "0.10"
 humantime = "2.0"
 #petgraph = "0.6"
@@ -14,7 +16,9 @@ humantime = "2.0"
 regex = "1"
 #strum = "0.20"
 #strum_macros = "0.20"
-#num = "0.4"
+num = "0.4"
+num-derive = "0.3"
+num-traits = "0.2"
 rstats = "0.9"
 ##cached = "0.22"
 #numeric-array = "0.5"
@@ -25,7 +29,7 @@ ndarray = "0.15"
 
 [[bin]]
 name = "aoc"
-path = "src/day15.rs"
+path = "src/day16.rs"
 
 [profile.release]
 opt-level = 3
