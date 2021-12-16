@@ -1,15 +1,40 @@
 
 use ndarray::{s, Array, Array2, Ix2};
+use std::collections::BinaryHeap;
+use std::cmp::Ordering;
 
 const INPUT: &str = include_str!("../input/2021/day15.txt");
 
 type Data = Array2<u8>;
 
-pub fn main() {
-    let data = parse_input(INPUT);
+#[derive(PartialEq, Eq)]
+struct Point {
+    p: (usize, usize),
+    v: u32
+}
 
-    println!("Part1: {}", part1(&data));
-    println!("Part2: {}", part2(&data));
+impl PartialOrd for Point {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.v.partial_cmp(&(u32::MAX - &other.v))).unwrap()
+    }
+}
+
+impl Ord for Point {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(&other).unwrap()
+    }
+}
+
+pub fn main() {
+    let mut now = std::time::Instant::now();
+    let data = parse_input(INPUT);
+    println!("Parsing [{}]\n", humantime::format_duration(now.elapsed()));
+
+    now = std::time::Instant::now();
+    println!("Part1: {} [{}]", part1(&data), humantime::format_duration(now.elapsed()));
+
+    now = std::time::Instant::now();
+    println!("Part2: {} [{}]", part2(&data), humantime::format_duration(now.elapsed()));
 }
 
 fn parse_input(input: &str) -> Data {
@@ -28,6 +53,47 @@ fn parse_input(input: &str) -> Data {
         input_data.iter().flatten().cloned().collect(),
     )
     .unwrap()
+}
+
+fn part1(data: &Data) -> usize {
+    let mut costs = Array::from_elem(data.shape(), u32::MAX)
+        .into_dimensionality::<Ix2>()
+        .unwrap();
+
+    costs[[0, 0]] = 0;
+    let mut queue = BinaryHeap::from([Point{p: (0,0), v: 0}]);
+    let bottom_right = (data.shape()[0] - 1, data.shape()[1] - 1);
+
+    // Run Dijkstra algorithm
+    loop {
+        let current = if queue.len() > 0 {
+            queue.pop().unwrap()
+        } else {
+            break;
+        };
+
+        // Stop when reaching bottom right
+        if current.p == bottom_right {
+            return costs[bottom_right] as usize
+        }
+
+        let cur_v = costs[current.p];
+
+        for adj in get_adjescent(data.shape(), current.p) {
+            let adj_v = data[adj];
+            let costs = &mut costs[adj];
+
+            if (cur_v + adj_v as u32) < *costs {
+                *costs = cur_v + adj_v as u32;
+                queue.push(Point{p: adj, v: *costs});
+            }
+        }
+    }
+    0
+}
+
+fn part2(data: &Data) -> usize {
+    part1(&replicate_matrix(&[5, 5], data))
 }
 
 fn replicate_matrix(repeat: &[usize], data: &Array2<u8>) -> Array2<u8> {
@@ -71,49 +137,6 @@ fn get_adjescent(shape: &[usize], point: (usize, usize)) -> Box<impl Iterator<It
     ];
 
     Box::new(adjescent.into_iter().filter_map(std::convert::identity))
-}
-
-fn part2(data: &Data) -> usize {
-    part1(&replicate_matrix(&[5, 5], data))
-}
-
-fn part1(data: &Data) -> usize {
-    let mut costs = Array::from_elem(data.shape(), u32::MAX)
-        .into_dimensionality::<Ix2>()
-        .unwrap();
-
-    costs[[0, 0]] = 0;
-    let mut queue = vec![(0, 0)];
-    let bottom_right = (data.shape()[0] - 1, data.shape()[1] - 1);
-
-    // Run Dijkstra algorithm
-    loop {
-        queue.sort_unstable_by(|&a, &b| costs[a].partial_cmp(&costs[b]).unwrap());
-
-        let current = if queue.len() > 0 {
-            queue.remove(0)
-        } else {
-            break;
-        };
-
-        // Stop when reaching bottom right
-        if current == bottom_right {
-            return costs[bottom_right] as usize
-        }
-
-        let cur_v = costs[current];
-
-        for adj in get_adjescent(data.shape(), current) {
-            let adj_v = data[adj];
-            let costs = &mut costs[adj];
-
-            if (cur_v + adj_v as u32) < *costs {
-                *costs = cur_v + adj_v as u32;
-                queue.push(adj);
-            }
-        }
-    }
-    0
 }
 
 #[cfg(test)]
