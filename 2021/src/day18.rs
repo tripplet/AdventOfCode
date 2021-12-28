@@ -1,50 +1,38 @@
 use std::cell::{Cell, RefCell};
 use std::error::Error;
+use std::fmt::{self, Debug, Formatter};
 use std::rc::Rc;
 use std::rc::Weak;
-use std::fmt::{self, Debug, Formatter};
+use itertools::Itertools;
 
-enum VV {
-    Number(u8),
-    Pair(RefCell<Rc<Sfn>>, RefCell<Rc<Sfn>>),
+#[derive(Copy, Clone, PartialEq)]
+enum Symbol {
+    Number(u32),
+    OpenBracket,
+    ClosingBracket,
 }
 
+#[derive(Clone, PartialEq)]
 struct Sfn {
-    value: RefCell<VV>,
-    parent: RefCell<Weak<Sfn>>,
+    symbols: Vec<Symbol>,
+}
+
+impl Debug for Symbol {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Symbol::Number(nb) => write!(f, "{}", nb),
+            Symbol::OpenBracket => write!(f, "["),
+            Symbol::ClosingBracket => write!(f, "]"),
+        }
+    }
 }
 
 impl Debug for Sfn {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("{:?}", &self.value.borrow()))
-    }
-}
-
-impl Debug for VV {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            VV::Number(nb) => f.write_fmt(format_args!("{}", nb)),
-            VV::Pair(left, right) => {
-                f.write_fmt(format_args!("[{:?},{:?}]", &left.borrow(), &right.borrow()))
-            }
+        for symbol in &self.symbols {
+            write!(f, "{:?} ", symbol);
         }
-    }
-}
-
-impl PartialEq for Sfn {
-    fn eq(&self, other: &Self) -> bool {
-        if let VV::Number(self_value) = *self.value.borrow() {
-            if let VV::Number(other_value) = *other.value.borrow() {
-                return self_value == other_value;
-            }
-            return false;
-        } else if let VV::Pair(self_left, self_right) = &*self.value.borrow() {
-            if let VV::Pair(other_left, other_right) = &*other.value.borrow() {
-                return self_left == other_left && self_right == other_right;
-            }
-            return false;
-        }
-        return false;
+        Ok(())
     }
 }
 
@@ -71,248 +59,203 @@ pub fn main() {
 }
 
 fn parse_input(input: &str) -> Result<Vec<Sfn>, Box<dyn Error>> {
-    let numbers: Result<Vec<Rc<_>>,_> = input.trim().lines().map(Sfn::from_str).collect();
-    let unwraped_numbers: Result<Vec<Sfn>,_> = numbers?.into_iter().map(|sfn| Rc::try_unwrap(sfn)).collect();
-    unwraped_numbers.map_err(|_| "".into())
+    input.trim().lines().map(Sfn::from_str).collect()
 }
 
 fn part1(target: &[Sfn]) -> usize {
-    if let Some(xx) = target[0].left().and_then(|v| v.left()).and_then(|v| v.right()) {
-        dbg!(&xx);
-        xx.explode();
+    let mut numbers = target.to_vec();
+
+    while numbers.len() > 1 {
+        let seconds = numbers.remove(1);
+        numbers[0].add(seconds);
+        numbers[0].reduce();
     }
 
-    42
+    numbers[0].magnitude()
 }
 
-fn part2(_target: &[Sfn]) -> usize {
-    23
+fn part2(target: &[Sfn]) -> usize {
+    target.iter().combinations(2).map(|numbers| {
+        let mut result = numbers[0].clone();
+        result.add(numbers[1].clone());
+        result.reduce();
+        let mag = result.magnitude();
+
+        let mut result = numbers[1].clone();
+        result.add(numbers[0].clone());
+        result.reduce();
+        let mag2 = result.magnitude();
+
+        std::cmp::max(mag, mag2)
+    }).max().unwrap()
 }
 
 impl Sfn {
-    #[allow(dead_code)]
-    fn pair(left: u8, right: u8) -> Self {
-        Sfn {
-            value: VV::Pair(
-                RefCell::new(Sfn::number(left).into()),
-                RefCell::new(Sfn::number(right).into()),
-            ).into(),
-            parent: RefCell::new(Weak::default())
-        }
-    }
-
-    fn number(value: u8) -> Self {
-        Sfn {
-            value: RefCell::new(VV::Number(value)),
-            parent: RefCell::new(Weak::default())
-        }
-    }
-
-    fn from_str(input: &str) -> Result<Rc<Self>, Box<dyn Error>> {
+    fn from_str(input: &str) -> Result<Self, Box<dyn Error>> {
         Sfn::from_chars(&mut input.chars().peekable())
     }
 
-    fn from_chars(chars: &mut std::iter::Peekable<std::str::Chars>) -> Result<Rc<Sfn>, Box<dyn Error>> {
-        if let Some(token) = chars.next() {
-            if token == '[' {
-                let left = Sfn::from_chars(chars)?;
-                chars.next(); // skip ','
-                let right = Sfn::from_chars(chars)?;
-                chars.next(); // skip ']'
-
-                let new = Rc::new(Sfn {
-                    value: VV::Pair(RefCell::new(Rc::clone(&left)), RefCell::new(Rc::clone(&right))).into(),
-                    parent: RefCell::new(Weak::default()),
-                });
-
-                *left.parent.borrow_mut() = Rc::downgrade(&new);
-                *right.parent.borrow_mut() = Rc::downgrade(&new);
-                return Ok(new);
-            } else if token.is_digit(10) {
-                if let Some(next_char) = chars.peek() {
-                    if next_char.is_digit(10) {
-                        let second_digit = chars.next().unwrap();
-                        return Ok(Rc::new(Sfn::number(format!("{}{}", token, second_digit).parse()?)));
-                    }
-                }
-                return Ok(Rc::new(Sfn::number(token.to_digit(10).unwrap() as u8)));
-            }
-        }
-        Err("invalid input".into())
-    }
-
-    #[allow(dead_code)]
-    fn add(left: Rc<Sfn>, right: Rc<Sfn>) -> Rc<Sfn> {
-        let new = Rc::new(Sfn {
-            value: VV::Pair(RefCell::new(Rc::clone(&left)), RefCell::new(Rc::clone(&left))).into(),
-            parent: RefCell::new(Weak::default())
-        });
-
-        *left.parent.borrow_mut() = Rc::downgrade(&new);
-        *right.parent.borrow_mut() = Rc::downgrade(&new);
-        new
-    }
-
-    #[allow(dead_code)]
-    fn reduce(&self) {
-    }
-
-    #[allow(dead_code)]
-    fn split(&self) -> bool {
-        if let VV::Pair(ref left, ref right) = *self.value.borrow() {
-            let nb = if let VV::Number(number) = *left.borrow().value.borrow() {
-                Some(number)
-            } else {
-                None
-            };
-
-            if let Some(number) = nb {
-                if number > 9 {
-                    Sfn::replace(number, left);
-                    return true;
-                }
-            }
-
-            let nb = if let VV::Number(number) = *right.borrow().value.borrow() {
-                Some(number)
-            } else {
-                None
-            };
-
-            if let Some(number) = nb {
-                if number > 9 {
-                    Sfn::replace(number, right);
-                    return true;
-                }
-            }
-        }
-        false
-    }
-
-
-    fn replace(number: u8, nb: &RefCell<Rc<Sfn>>) {
-        nb.swap(&RefCell::new(Rc::new(Sfn::pair(
-            (number as f64 / 2.0).floor() as u8,
-            (number as f64 / 2.0).ceil() as u8,
-        ))));
-    }
-
-    fn left(&self) -> Option<Rc<Sfn>> {
-        match *self.value.borrow() {
-            VV::Pair(ref left, ..) => {
-                Some(left.borrow().clone())
-            },
-            _ => None
-        }
-    }
-
-    fn right(&self) -> Option<Rc<Sfn>> {
-        match *self.value.borrow() {
-            VV::Pair(.., ref right) => {
-                Some(right.borrow().clone())
-            },
-            _ => None
-        }
-    }
-
-    fn explode(&self) -> bool {
-        let nb_left: u8;
-        let nb_right: u8;
-
-        if let VV::Pair(ref left, ref right) = *self.value.borrow() {
-            nb_left = if let VV::Number(number) = *left.borrow().value.borrow() {
-                number
-            } else {
-                return false;
-            };
-
-            nb_right = if let VV::Number(number) = *right.borrow().value.borrow() {
-                number
-            } else {
-                return false;
-            };
-        }
-
-        let pp = &self.parent.borrow().upgrade();
+    fn from_chars(chars: &mut std::iter::Peekable<std::str::Chars>) -> Result<Sfn, Box<dyn Error>> {
+        let mut symbols: Vec<Symbol> = vec![];
 
         loop {
-            if let Some(cur) = pp {
+            if let Some(token) = chars.next() {
+                if token == ',' {
+                    continue;
+                } else if token == '[' {
+                    symbols.push(Symbol::OpenBracket);
+                } else if token == ']' {
+                    symbols.push(Symbol::ClosingBracket);
+                } else if token.is_digit(10) {
+                    if let Some(next_char) = chars.peek() {
+                        if next_char.is_digit(10) {
+                            symbols.push(Symbol::Number(format!("{}{}", token, chars.next().unwrap()).parse()?));
+                            continue;
+                        }
+                    }
+                    symbols.push(Symbol::Number(token.to_digit(10).unwrap() as u32));
+                }
+            } else {
+                break;
+            }
+        }
+        Ok(Sfn { symbols })
+    }
 
+    #[allow(dead_code)]
+    fn add(&mut self, other: Sfn) {
+        self.symbols.insert(0, Symbol::OpenBracket);
+        self.symbols.append(&mut other.symbols.clone());
+        self.symbols.push(Symbol::ClosingBracket);
+    }
+
+    #[allow(dead_code)]
+    fn reduce(&mut self) {
+        loop {
+            if self.explode() {
+                continue;
+            }
+
+            if self.split() {
+                continue;
+            }
+
+            break;
+        }
+    }
+
+    #[allow(dead_code)]
+    fn split(&mut self) -> bool {
+        for idx in 0..self.symbols.len() {
+            if let Symbol::Number(number) = self.symbols[idx] {
+                if number > 9 {
+                    self.symbols[idx] = Symbol::Number((number as f64 / 2.0).floor() as u32);
+                    self.symbols
+                        .insert(idx + 1, Symbol::Number((number as f64 / 2.0).ceil() as u32));
+                    self.symbols.insert(idx, Symbol::OpenBracket);
+                    self.symbols.insert(idx + 3, Symbol::ClosingBracket);
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn find_next_number_idx(&mut self, start_index: usize, direction: isize) -> Option<&mut Symbol> {
+        let mut index: isize = start_index as isize + direction;
+        loop {
+            if index < 0 || index >= self.symbols.len() as isize {
+                return None;
+            }
+
+            if let Some(Symbol::Number(_)) = self.symbols.get_mut(index as usize) {
+                return self.symbols.get_mut(index as usize);
+            }
+
+            // if let Some(Symbol::Number(ref mut nb)) = a {
+            //     //return Some(nb);
+            // }
+            index += direction;
+        }
+        unreachable!();
+    }
+
+    fn explode(&mut self) -> bool {
+        let mut level = 0;
+
+        for idx in 0..self.symbols.len() {
+            if self.symbols[idx] == Symbol::OpenBracket {
+                level += 1;
+            } else if self.symbols[idx] == Symbol::ClosingBracket {
+                level -= 1;
+            } else if level > 4 {
+                if let Symbol::Number(left) = self.symbols[idx] {
+                    if let Some(Symbol::Number(right)) = self.symbols.get(idx + 1).cloned() {
+                        if let Some(Symbol::Number(ref mut left_nb)) = self.find_next_number_idx(idx, -1) {
+                            *left_nb += left; // Explode number left
+                        }
+                        if let Some(Symbol::Number(ref mut right_nb)) = self.find_next_number_idx(idx + 1, 1) {
+                            *right_nb += right; // Explode number right
+                        }
+                        self.symbols[idx] = Symbol::Number(0); // set own value to 0
+                        self.symbols.remove(idx + 1);
+                        self.symbols.remove(idx + 1);
+                        self.symbols.remove(idx - 1);
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    fn magnitude(&self) -> usize {
+        let mut magnitudes = self.symbols.clone();
+
+        while magnitudes.len() > 1 {
+            for idx in 0..magnitudes.len() {
+                if let Symbol::Number(left) = magnitudes[idx] {
+                    if let Some(Symbol::Number(right)) = magnitudes.get(idx + 1).cloned() {
+
+                        magnitudes[idx] = Symbol::Number(3*left + 2 * right); // set own value to 0
+                        magnitudes.remove(idx + 1);
+                        magnitudes.remove(idx + 1);
+                        magnitudes.remove(idx - 1);
+                        break;
+                    }
+                }
             }
         }
 
-        self.value.swap(&RefCell::new(VV::Number(0)));
-        false
+        match magnitudes[0] {
+            Symbol::Number(number) => number as usize,
+            _ => panic!(),
+        }
     }
-}
-
-fn print_type_of<T>(_: &T) {
-    println!("{}", std::any::type_name::<T>())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn parse() {
-    //     let expected = Sfn::pair(1, 9);
-    //     assert_eq!(expected, "[1,9]".parse::<Sfn>().unwrap());
+    const EXAMPLE: &str = include_str!("../input/2021/day18_example.txt");
 
-    //     let expected = Sfn{
-    //         left: Sfn::Pair {
-    //             left: Sfn::Pair {
-    //                 left: Sfn::pair(7,3).into(),
-    //                 right: Sfn::number(1).into(),
-    //                 parent: Weak::default(),
-    //             }
-    //             .into(),
-    //             right: Sfn::Pair {
-    //                 left: Sfn::pair(4, 6).into(),
-    //                 right: Sfn::pair(5, 1).into(),
-    //                 parent: Weak::default(),
-    //             }
-    //             .into(),
-    //             parent: Weak::default(),
-    //         }
-    //         .into(),
-    //         right: Sfn::Pair {
-    //             left: Sfn::Pair {
-    //                 left: Sfn::pair(4, 7).into(),
-    //                 right: Sfn::number(4).into(),
-    //                 parent: Weak::default(),
-    //             }
-    //             .into(),
-    //             right: Sfn::Pair {
-    //                 left: Sfn::pair(5, 2).into(),
-    //                 right: Sfn::pair(3, 7).into(),
-    //                 parent: Weak::default(),
-    //             }
-    //             .into(),
-    //             parent: Weak::default(),
-    //         }
-    //         .into(),
-    //         parent: Weak::default(),
-    //     };
-
-    //     assert_eq!(
-    //         expected,
-    //         "[[[[7,3],1],[[4,6],[5,1]]],[[[4,7],4],[[5,2],[3,7]]]]"
-    //             .parse::<Sfn>()
-    //             .unwrap()
-    //     );
-    // }
+    #[test]
+    fn parse() {
+        assert_eq!(
+            "[ [ [ 1 2 ] 4 ] [ 7 3 ] ] ",
+            format!("{:?}", Sfn::from_str("[[[1,2],4],[7,3]]").unwrap())
+        );
+    }
 
     #[test]
     fn add() {
         let expected = Sfn::from_str("[[[1,2],4],[7,3]]").unwrap();
 
-        dbg!(&expected);
+        let mut left = Sfn::from_str("[[1,2],4]").unwrap();
+        left.add(Sfn::from_str("[7,3]").unwrap());
 
-        assert_eq!(
-            expected,
-            Sfn::add(Sfn::from_str("[[1,2],4]").unwrap(), Sfn::from_str("[7,3]").unwrap())
-        );
+        assert_eq!(expected, left);
     }
 
     #[test]
@@ -324,20 +267,85 @@ mod tests {
 
     #[test]
     fn split() {
-        let check = Sfn::from_str("[13,2]").unwrap();
-        check.split();
+        let mut check = Sfn::from_str("[13,2]").unwrap();
+        assert_eq!(true, check.split());
         assert_eq!(Sfn::from_str("[[6,7],2]").unwrap(), check);
 
-        let check = Sfn::from_str("[4,17]").unwrap();
-        check.split();
+        let mut check = Sfn::from_str("[4,17]").unwrap();
+        assert_eq!(true, check.split());
         assert_eq!(Sfn::from_str("[4,[8,9]]").unwrap(), check);
 
-        let check = Sfn::from_str("[4,18]").unwrap();
-        check.split();
+        let mut check = Sfn::from_str("[4,18]").unwrap();
+        assert_eq!(true, check.split());
         assert_eq!(Sfn::from_str("[4,[9,9]]").unwrap(), check);
 
-        let check = Sfn::from_str("[13,18]").unwrap();
-        check.split();
-        assert_eq!(Sfn::from_str("[[6,7|,18]").unwrap(), check);
+        let mut check = Sfn::from_str("[13,18]").unwrap();
+        assert_eq!(true, check.split());
+        assert_eq!(Sfn::from_str("[[6,7],18]").unwrap(), check);
+
+        let mut check = Sfn::from_str("[3,2]").unwrap();
+        assert_eq!(false, check.split());
+        assert_eq!(Sfn::from_str("[3,2]").unwrap(), check);
+    }
+
+    #[test]
+    fn explode() {
+        let mut check = Sfn::from_str("[[6,[5,[4,[3,2]]]],1]").unwrap();
+        assert_eq!(true, check.explode());
+        assert_eq!(Sfn::from_str("[[6,[5,[7,0]]],3]").unwrap(), check);
+
+        let mut check = Sfn::from_str("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]").unwrap();
+        assert_eq!(true, check.explode());
+        assert_eq!(Sfn::from_str("[[[[0,7],4],[7,[[8,4],9]]],[1,1]]").unwrap(), check);
+    }
+
+    #[test]
+    fn example() {
+        let mut check = Sfn::from_str("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]").unwrap();
+        check.reduce();
+        assert_eq!(Sfn::from_str("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]").unwrap(), check);
+    }
+
+    #[test]
+    fn example_add() {
+        let mut numbers = parse_input(EXAMPLE).unwrap();
+
+        while numbers.len() > 1 {
+            let seconds = numbers.remove(1);
+            numbers[0].add(seconds);
+            numbers[0].reduce();
+        }
+
+        assert_eq!(
+            Sfn::from_str("[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]").unwrap(),
+            numbers[0]
+        );
+    }
+
+    #[test]
+    fn magnitudes() {
+        let mut check = Sfn::from_str("[[1,2],[[3,4],5]]").unwrap();
+        assert_eq!(143, check.magnitude());
+
+        let mut check = Sfn::from_str("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]").unwrap();
+        assert_eq!(1384, check.magnitude());
+
+        let mut check = Sfn::from_str("[[[[1,1],[2,2]],[3,3]],[4,4]]").unwrap();
+        assert_eq!(445, check.magnitude());
+
+        let mut check = Sfn::from_str("[[[[3,0],[5,3]],[4,4]],[5,5]]").unwrap();
+        assert_eq!(791, check.magnitude());
+
+        let mut check = Sfn::from_str("[[[[5,0],[7,4]],[5,5]],[6,6]]").unwrap();
+        assert_eq!(1137, check.magnitude());
+
+        let mut check = Sfn::from_str("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]").unwrap();
+        assert_eq!(3488, check.magnitude());
+    }
+
+
+    #[test]
+    fn example_part2() {
+        assert_eq!(3993, part2(&parse_input(EXAMPLE).unwrap()));
     }
 }
