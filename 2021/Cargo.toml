@@ -19,7 +19,7 @@ strum_macros = "0.23"
 num = "0.4"
 num-derive = "0.3"
 num-traits = "0.2"
-rstats = "0.9"
+rstats = "1.0"
 ##cached = "0.22"
 #numeric-array = "0.5"
 lazy_static = "1.4"
@@ -29,7 +29,7 @@ ndarray = "0.15"
 
 [[bin]]
 name = "aoc"
-path = "src/day25.rs"
+path = "src/day19.rs"
 
 [profile.release]
 opt-level = 3
