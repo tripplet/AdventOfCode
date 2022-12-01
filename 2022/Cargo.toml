@@ -1,0 +1,22 @@
+[package]
+name = "adventofcode-2022"
+version = "1.0.0"
+authors = ["Tobias Tangemann <tobias@tangemann.org>"]
+edition = "2021"
+
+[dependencies]
+regex = "1.6"
+itertools = "0.10"
+humantime = "2.1"
+strum = "0.24"
+strum_macros = "0.24"
+
+[[bin]]
+name = "aoc"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = 'abort'
