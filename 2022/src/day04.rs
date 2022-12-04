@@ -38,17 +38,7 @@ impl Section {
     }
 
     fn overlaps(&self, other: &Self) -> bool {
-        (other.start >= self.start && other.start <= self.end) || (other.end >= self.start && other.end <= self.end)
-    }
-
-    fn overlaps2(&self, other: &Self) -> bool {
-        (other.start <= self.end && other.start >= self.start) || (other.end >= self.start && other.start <= self.start)
-    }
-
-    fn overlaps3(&self, other: &Self) -> bool {
-        (self.start <= other.start && self.end >= other.end)
-            || (other.start >= self.start && other.start <= self.end)
-            || (other.end >= self.start && other.end <= self.end)
+        !(self.end < other.start || self.start > other.end)
     }
 }
 
@@ -57,13 +47,7 @@ pub fn part1(input: &ParseResult) -> usize {
 }
 
 pub fn part2(input: &ParseResult) -> usize {
-    dbg!(input
-        .iter()
-        .filter(|&(a, b)| { a.overlaps2(b) != a.overlaps(b) })
-        .map(|(a, b)| (a, b, a.overlaps2(b), a.overlaps(b)))
-        .collect::<Vec<_>>());
-
-    input.iter().filter(|&(a, b)| a.overlaps3(b)).count()
+    input.iter().filter(|&(a, b)| a.overlaps(b)).count()
 }
 
 #[cfg(test)]
@@ -72,18 +56,8 @@ mod tests {
 
     macro_rules! section {
         ($start:expr, $end:expr) => {
-            &Section {
-                start: $start,
-                end: $end,
-            }
+            &Section { start: $start, end: $end }
         };
-        ($str:expr) => {{
-            let sections = $str.split_once(",").unwrap();
-            (
-                &sections.0.parse::<Section>().unwrap(),
-                &sections.1.parse::<Section>().unwrap(),
-            )
-        }};
     }
 
     #[test]
@@ -93,20 +67,13 @@ mod tests {
 
     #[test]
     fn test_part2_example() {
-        let input = parse_input(
-            "5-7,7-9\n\
-             2-8,3-7\n\
-             6-6,4-6\n\
-             2-6,4-8",
-        );
-
+        let input = parse_input("5-7,7-9\n2-8,3-7\n6-6,4-6\n2-6,4-8");
         assert!(part2(&input) == 4);
     }
 
     #[test]
     fn test_overlap() {
         assert!(!section![12, 14].overlaps(section![15, 2]));
-        assert!(section![1, 14].overlaps(section![15, 2]));
-        assert!(section!("7-8,7-43").0.overlaps(section!("7-8,7-43").1));
+        assert!(section![1, 14].overlaps(section![2, 15]));
     }
 }
