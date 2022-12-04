@@ -5,11 +5,12 @@ authors = ["Tobias Tangemann <tobias@tangemann.org>"]
 edition = "2021"
 
 [dependencies]
-regex = "1.6"
+#regex = "1.6"
 itertools = "0.10"
 humantime = "2.1"
-strum = "0.24"
-strum_macros = "0.24"
+#rayon = "1.6.0"
+#strum = "0.24"
+#strum_macros = "0.24"
 
 [[bin]]
 name = "aoc"
