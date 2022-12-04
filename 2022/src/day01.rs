@@ -49,5 +49,5 @@ pub fn part2(input: &ParseResult) -> NUMBER {
     }
 
     sums.sort_unstable();
-    sums.into_iter().rev().take(3).sum()
+    sums.iter().rev().take(3).sum()
 }
