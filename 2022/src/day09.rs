@@ -22,41 +22,8 @@ pub fn parse_input(input: &str) -> ParseResult {
         .collect()
 }
 
-pub fn part1(input: &ParseResult) -> usize {
-    let mut tail_map: HashSet<(NUMBER, NUMBER)> = HashSet::new();
-
-    let mut head_pos = (0, 0); // (y, x)
-    let mut tail_pos = (0, 0); // (y, x)
-
-    tail_map.insert(tail_pos);
-
-    for (dy, dx) in input.into_iter() {
-        // Move the head
-        for _ in 1..=(dx + dy).abs() {
-            // Move the head
-            head_pos = (head_pos.0 + dy.signum(), head_pos.1 + dx.signum());
-
-            // Check tail needs to be moved
-            if (head_pos.0 - tail_pos.0).abs() > 1 || (head_pos.1 - tail_pos.1).abs() > 1 {
-                // Move the tail
-                // Brutefore the new tail_pos until it's only one step away from the head
-                tail_pos = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)].iter().map(
-                    |(tdy, tdx)| {
-                        let new_tail_pos = (tail_pos.0 + tdy, tail_pos.1 + tdx);
-                        let delta = (new_tail_pos.0 - head_pos.0).abs() + (new_tail_pos.1 - head_pos.1).abs();
-                        (new_tail_pos, delta)
-
-                    }
-                ).min_by_key(|(_, delta)| *delta).unwrap().0;
-                tail_map.insert(tail_pos);
-            }
-        }
-    }
-
-    //draw_tail_map(&tail_map);
-
-    tail_map.len()
-}
+pub fn part1(input: &ParseResult) -> usize { get_tail_pos_count::<2>(input) }
+pub fn part2(input: &ParseResult) -> usize { get_tail_pos_count::<10>(input) }
 
 #[allow(dead_code)]
 fn draw_tail_map(tail_map: &HashSet<(i32, i32)>) {
@@ -92,11 +59,11 @@ fn draw_tail_map(tail_map: &HashSet<(i32, i32)>) {
     }
 }
 
-pub fn part2(input: &ParseResult) -> usize {
+fn get_tail_pos_count<const LENGTH: usize>(input: &ParseResult) -> usize {
     let mut tail_map: HashSet<(NUMBER, NUMBER)> = HashSet::new();
-    tail_map.insert((0,0));
+    tail_map.insert((0, 0));
 
-    let mut snake = vec![(0, 0); 10]; // (y, x)
+    let mut snake = vec![(0, 0); LENGTH]; // (y, x)
 
     for (dy, dx) in input.into_iter() {
         // Move the head
@@ -104,18 +71,20 @@ pub fn part2(input: &ParseResult) -> usize {
             // Move the head
             snake[0] = (snake[0].0 + dy.signum(), snake[0].1 + dx.signum());
 
-
             for i in 1..snake.len() {
-                if (snake[i].0 - snake[i-1].0).abs() > 1 || (snake[i].1 - snake[i-1].1).abs() > 1 {
+                if (snake[i].0 - snake[i - 1].0).abs() > 1 || (snake[i].1 - snake[i - 1].1).abs() > 1 {
                     // Move the reast of the snake
                     // Brutefore the new tail_pos until it's only one step away from the head
-                    snake[i] = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)].iter().map(
-                        |(tdy, tdx)| {
+                    snake[i] = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
+                        .iter()
+                        .map(|(tdy, tdx)| {
                             let new_pos = (snake[i].0 + tdy, snake[i].1 + tdx);
-                            let delta = (new_pos.0 - snake[i-1].0).abs() + (new_pos.1 - snake[i-1].1).abs();
+                            let delta = (new_pos.0 - snake[i - 1].0).abs() + (new_pos.1 - snake[i - 1].1).abs();
                             (new_pos, delta)
-                        }
-                    ).min_by_key(|(_, delta)| *delta).unwrap().0;
+                        })
+                        .min_by_key(|(_, delta)| *delta)
+                        .unwrap()
+                        .0;
 
                     if i == snake.len() - 1 {
                         tail_map.insert(snake[i]);
