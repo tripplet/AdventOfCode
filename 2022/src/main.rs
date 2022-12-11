@@ -1,7 +1,7 @@
-mod day10;
-use day10::*;
+mod day11;
+use day11::*;
 
-const INPUT: &str = include_str!("../input/2022/day10.txt");
+const INPUT: &str = include_str!("../input/2022/day11.txt");
 //const INPUT_EXAMPLE: &str = include_str!("../input/2022/day1.txt");
 
 fn main() {
