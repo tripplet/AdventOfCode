@@ -33,51 +33,37 @@ pub struct Monkey {
     inspect_count: NUMBER,
 }
 
-/// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
-/// trailing whitespace, returning the output of `inner`.
-/// https://github.com/Geal/nom/blob/main/doc/nom_recipes.md
-fn ws<'a, F: 'a, O, E: ParseError<&'a str>>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
-where
-    F: Fn(&'a str) -> IResult<&'a str, O, E>,
-{
-    delimited(multispace0, inner, multispace0)
-}
-
 impl Monkey {
     fn parse(s: &str) -> IResult<&str, Self> {
-        let (s, _) = tag("Monkey ")(s)?;
-        let (s, number) = map_res(digit1, |s: &str| s.parse())(s)?;
-        let (s, _) = tag(":")(s)?;
+        let (s, _) = multispace0(s)?;
+        let (s, number) = delimited(tag("Monkey "), map_res(digit1, |s: &str| s.parse()), tag(":"))(s)?;
 
         let (s, _) = multispace1(s)?;
         let (s, _) = tag("Starting items: ")(s)?;
-        let (s, items) = map_res(separated_list0(ws(tag(",")), digit1), |v: Vec<&str>| {
+        let (s, items) = map_res(separated_list0(tuple((multispace0, tag(","), multispace0)), digit1), |v: Vec<&str>| {
             v.iter().map(|s| s.parse::<NUMBER>()).collect()
         })(s)?;
 
-        let (s, _) = multispace1(s)?;
-        let (s, _) = tag("Operation: new = ")(s)?;
+        let (s, _) = tuple((multispace1, tag("Operation: new = ")))(s)?;
         let (s, op) = MonkeyOperation::parse(s)?;
 
-        let (s, _) = multispace1(s)?;
-        let (s, _) = tag("Test: divisible by ")(s)?;
+        let (s, _) = tuple((multispace1, tag("Test: divisible by ")))(s)?;
         let (s, divisor) = map_res(digit1, |s: &str| s.parse())(s)?;
 
-        let (s, _) = multispace1(s)?;
-        let (s, _) = tag("If true: throw to monkey ")(s)?;
+        let (s, _) = tuple((multispace1, tag("If true: throw to monkey ")))(s)?;
         let (s, condition_true_monkey) = map_res(digit1, |s: &str| s.parse())(s)?;
 
-        let (s, _) = multispace1(s)?;
-        let (s, _) = tag("If false: throw to monkey ")(s)?;
+        let (s, _) = tuple((multispace1, tag("If false: throw to monkey ")))(s)?;
         let (s, condition_false_monkey) = map_res(digit1, |s: &str| s.parse())(s)?;
 
+        // Consume any trailing whitespace
         let (s, _) = multispace0(s)?;
 
         Ok((
             s,
             Monkey {
-                number: number,
-                items: items,
+                number,
+                items,
                 op,
                 divisor,
                 condition_true_monkey,
@@ -159,13 +145,7 @@ fn simulate_turn(monkeys: &mut Vec<Monkey>, worry_fn: impl Fn(NUMBER) -> NUMBER)
     }
 }
 
-pub fn part1(monkeys: &ParseResult) -> usize {
-    let mut monkeys = monkeys.clone();
-
-    for _ in 0..20 {
-        simulate_turn(&mut monkeys, |x| x / 3);
-    }
-
+fn get_monkey_business(monkeys: &Vec<Monkey>) -> usize {
     monkeys
         .iter()
         .map(|m| m.inspect_count)
@@ -173,6 +153,16 @@ pub fn part1(monkeys: &ParseResult) -> usize {
         .rev()
         .take(2)
         .product::<NUMBER>() as usize
+}
+
+pub fn part1(monkeys: &ParseResult) -> usize {
+    let mut monkeys = monkeys.clone();
+
+    for _ in 0..20 {
+        simulate_turn(&mut monkeys, |x| x / 3);
+    }
+
+    get_monkey_business(&monkeys)
 }
 
 pub fn part2(monkeys: &ParseResult) -> usize {
@@ -187,20 +177,14 @@ pub fn part2(monkeys: &ParseResult) -> usize {
         simulate_turn(&mut monkeys, |x| x % lcm);
     }
 
-    monkeys
-        .iter()
-        .map(|m| m.inspect_count)
-        .sorted()
-        .rev()
-        .take(2)
-        .product::<NUMBER>() as usize
+    get_monkey_business(&monkeys)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const INPUT: &str = include_str!("../input/2022/day11_example.txt");
+    const INPUT: &str = include_str!("../input/2022/day11.txt");
     const INPUT_EXAMPLE: &str = include_str!("../input/2022/day11_example.txt");
 
     #[test]
