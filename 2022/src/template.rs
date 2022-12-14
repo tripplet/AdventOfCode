@@ -1,5 +1,5 @@
-type NUMBER = i32;
-type ParseResult = Vec<NUMBER>;
+type Number = i32;
+type ParseResult = Vec<Number>;
 
 pub fn parse_input(input: &str) -> ParseResult {
     vec![]
