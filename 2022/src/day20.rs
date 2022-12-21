@@ -32,9 +32,9 @@ fn get_coordinate_positions<'a>(
     let zero_pos = array.position(|&(_, nb)| nb == 0).unwrap();
 
     (
-        (zero_pos + 1000) % len as usize,
-        (zero_pos + 2000) % len as usize,
-        (zero_pos + 3000) % len as usize,
+        (zero_pos + 1000) % len,
+        (zero_pos + 2000) % len,
+        (zero_pos + 3000) % len,
     )
 }
 
