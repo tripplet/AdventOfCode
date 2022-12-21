@@ -75,7 +75,7 @@ pub fn part1(input: &ParseResult) -> isize {
 }
 
 pub fn part2(input: &ParseResult) -> isize {
-    let range = input.iter().fold(
+    let space_shape = input.iter().fold(
         (0, 0, 0),
         |(x, y, z), coordinate| {
             (
@@ -88,14 +88,14 @@ pub fn part2(input: &ParseResult) -> isize {
 
     let mut space = Array3::from_elem(
         (
-            (range.2 + 4) as usize,
-            (range.1 + 4) as usize,
-            (range.0 + 4) as usize,
+            (space_shape.2 + 4) as usize,
+            (space_shape.1 + 4) as usize,
+            (space_shape.0 + 4) as usize,
         ),
         Content::Empty,
     );
 
-    // move lava block to the center of the space to give room for sorounding water
+    // Move lava block to the center of the space to give room for surrounding water
     let input = input.iter().map(|c| {
         Coordinate {
             x: c.x + 2,

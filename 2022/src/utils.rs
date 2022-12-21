@@ -19,4 +19,5 @@ macro_rules! regex {
     }};
 }
 
+#[allow(unused_imports)]
 pub(crate) use regex;
