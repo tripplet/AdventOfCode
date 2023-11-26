@@ -1,14 +1,20 @@
+use aoc_runner_derive::aoc;
+use aoc_runner_derive::aoc_generator;
+
 type Number = i32;
 type ParseResult = Vec<Number>;
 
+#[aoc_generator(day1)]
 pub fn parse_input(input: &str) -> ParseResult {
     vec![]
 }
 
+#[aoc(day1, part1)]
 pub fn part1(input: &ParseResult) -> isize {
     42
 }
 
+#[aoc(day1, part2)]
 pub fn part2(input: &ParseResult) -> isize {
     42
 }
