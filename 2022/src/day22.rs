@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, ops::Add};
+use std::{collections::HashMap, ops::Add};
 
 use nom::{
     branch::alt,
@@ -14,6 +14,9 @@ type Number = i32;
 #[derive(Debug)]
 pub struct InputData {
     start: Coordinate,
+    block_size: Number,
+    rows: Number,
+    ncol: Number,
     panel: HashMap<Coordinate, Content>,
     instructions: Vec<Instruction>,
 }
@@ -25,6 +28,8 @@ struct Coordinate {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[allow(dead_code)]
+#[repr(u8)]
 enum Direction {
     Right = 0,
     Down,
@@ -48,21 +53,11 @@ enum Instruction {
 
 impl Direction {
     fn turn_left(&self) -> Direction {
-        match self {
-            Direction::Up => Direction::Left,
-            Direction::Down => Direction::Right,
-            Direction::Left => Direction::Down,
-            Direction::Right => Direction::Up,
-        }
+        unsafe { ::std::mem::transmute((*self as u8).overflowing_sub(1).0 % 4) }
     }
 
     fn turn_right(&self) -> Direction {
-        match self {
-            Direction::Up => Direction::Right,
-            Direction::Down => Direction::Left,
-            Direction::Left => Direction::Up,
-            Direction::Right => Direction::Down,
-        }
+        unsafe { ::std::mem::transmute((*self as u8 + 1) % 4) }
     }
 }
 
@@ -99,7 +94,10 @@ impl Content {
 
 fn parse(mut input: &str) -> IResult<&str, InputData> {
     let mut start = None;
+    let mut block_size = i32::MAX;
     let mut panel = HashMap::new();
+    let mut rows: Number = 0;
+    let mut ncol: Number = 0;
 
     for y in 0.. {
         let mut it = iterator(
@@ -111,16 +109,34 @@ fn parse(mut input: &str) -> IResult<&str, InputData> {
             )),
         );
 
+        let mut cur_block_size = 0;
+
         it.enumerate().for_each(|(x, content)| {
+            ncol = ncol.max(x as Number);
+            rows = rows.max(y);
+
             let pos = Coordinate {
                 x: x as Number,
                 y: y as Number,
             };
-            if start.is_none() && !content.is_void() && !content.is_wall() {
+            if start.is_none() && content.is_empty() {
                 start = Some(pos);
             }
+
+            if content.is_void() {
+                if cur_block_size != 0 {
+                    block_size = block_size.min(cur_block_size);
+                }
+
+                cur_block_size = 0;
+            } else {
+                cur_block_size += 1;
+            }
+
             panel.insert(pos, content);
         });
+
+        block_size = block_size.min(cur_block_size);
 
         input = (it.finish() as IResult<_, _>)?.0;
 
@@ -148,6 +164,9 @@ fn parse(mut input: &str) -> IResult<&str, InputData> {
         "",
         InputData {
             start: start.unwrap(),
+            block_size,
+            rows,
+            ncol,
             panel,
             instructions,
         },
@@ -159,75 +178,34 @@ pub fn parse_input(input: &str) -> InputData {
 }
 
 pub fn part1(input: &InputData) -> isize {
-    let rows = input.panel.keys().map(|c| c.y).max().unwrap() + 1;
-    let ncol = input.panel.keys().map(|c| c.x).max().unwrap() + 1;
-
-    let mut position = input.start;
-    let mut direction = Direction::Right;
-
-    let mut path = HashMap::new();
-
-    for instruction in &input.instructions {
-        match instruction {
-            Instruction::TurnLeft => { direction = direction.turn_left(); }
-            Instruction::TurnRight => { direction = direction.turn_right(); }
-            Instruction::Forward(n) => {
-                let mut step = *n;
-                while step > 0 {
-                    let new_position = position + direction;
-
-                    let at_postition = input.panel.get(&new_position);
-                    if let Some(content) = at_postition {
-                        if content.is_empty() {
-                            // Move normally to empty space
-                            position = new_position;
-                            path.insert(position, direction);
-                            step -= 1;
-                            continue;
-                        }
-                        else if content.is_wall() {
-                            // Hitting a wall
-                            break;
-                        }
-                        else {
-                            // Hitting a void -> Skip it
-                            if let Some(pos_after_void) = skip_void(new_position, direction, &input.panel, rows, ncol) {
-                                position = pos_after_void;
-                                path.insert(position, direction);
-                                step -= 1;
-                                continue;
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        // Hitting a void -> Skip it
-                        if let Some(pos_after_void) = skip_void(new_position, direction, &input.panel, rows, ncol) {
-                            position = pos_after_void;
-                            path.insert(position, direction);
-                            step -= 1;
-                            continue;
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        //print_panel(rows, ncol, input, &path);
-    }
-
-    //print_panel(rows, ncol, input, &path);
-
-    dbg!(Coordinate{ x: position.x + 1, y: position.y + 1 });
-
-    ((position.y + 1) * 1000 + (position.x + 1) * 4 + direction as Number) as isize
+    follow_path(input, &skip_void_part1)
 }
 
+pub fn part2(input: &InputData) -> isize {
+
+    // Create flat cube faces
+    let mut cube_coord = Vec::with_capacity(6);
+
+    for y in (0..input.rows).step_by(input.block_size as usize) {
+        for x in (0..input.ncol).step_by(input.block_size as usize) {
+            if let Some(content) = input.panel.get(&Coordinate { y, x }) {
+                if !content.is_void() {
+                    cube_coord.push((y / input.block_size, x / input.block_size, 0));
+                    print!("X");
+                    continue;
+                }
+            }
+            print!(" ");
+        }
+        println!();
+    }
+
+    dbg!(cube_coord);
+
+    follow_path(input, &skip_void_part1)
+}
+
+#[allow(dead_code)]
 fn print_panel(rows: i32, ncol: i32, input: &InputData, path: &HashMap<Coordinate, Direction>) {
     println!();
     println!();
@@ -258,37 +236,104 @@ fn print_panel(rows: i32, ncol: i32, input: &InputData, path: &HashMap<Coordinat
     }
 }
 
-fn skip_void(mut position: Coordinate, direction: Direction, panel: &HashMap<Coordinate, Content>, rows: i32, ncol: i32) -> Option<Coordinate> {
-    loop {
-        if let Some(content) = panel.get(&position) {
-            if content.is_empty() {
-                return Some(position);
+fn follow_path(
+    input: &InputData,
+    skip_void: &dyn Fn(
+        Coordinate,
+        Direction,
+        &InputData
+    ) -> Option<(Coordinate, Direction)>,
+) -> isize {
+    let mut position = input.start;
+    let mut direction = Direction::Right;
+    let mut path = HashMap::new();
+
+    for instruction in &input.instructions {
+        match instruction {
+            Instruction::TurnLeft => { direction = direction.turn_left(); }
+            Instruction::TurnRight => { direction = direction.turn_right(); }
+            Instruction::Forward(n) => {
+                let mut step = *n;
+                while step > 0 {
+                    let new_position = position + direction;
+
+                    let at_postition = input.panel.get(&new_position);
+                    if let Some(content) = at_postition {
+                        if content.is_empty() {
+                            // Move normally to empty space
+                            position = new_position;
+                            path.insert(position, direction);
+                            step -= 1;
+                            continue;
+                        } else if content.is_wall() {
+                            // Hitting a wall
+                            break;
+                        } else {
+                            // Hitting a void -> Skip it
+                            if let Some(pos_after_void) =
+                                skip_void(new_position, direction, input)
+                            {
+                                (position, direction) = pos_after_void;
+                                path.insert(position, direction);
+                                step -= 1;
+                                continue;
+                            } else {
+                                break;
+                            }
+                        }
+                    } else {
+                        // Hitting a void -> Skip it
+                        if let Some(pos_after_void) =
+                            skip_void(new_position, direction, input)
+                        {
+                            (position, direction) = pos_after_void;
+                            path.insert(position, direction);
+                            step -= 1;
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+                }
             }
-            else if content.is_wall() {
+        }
+
+        //print_panel(rows, ncol, input, &path);
+    }
+
+    //print_panel(rows, ncol, input, &path);
+
+    //dbg!(Coordinate{ x: position.x + 1, y: position.y + 1 });
+
+    ((position.y + 1) * 1000 + (position.x + 1) * 4 + direction as Number) as isize
+}
+
+fn skip_void_part1(
+    mut position: Coordinate,
+    direction: Direction,
+    data: &InputData,
+) -> Option<(Coordinate, Direction)> {
+    loop {
+        if let Some(content) = data.panel.get(&position) {
+            if content.is_empty() {
+                return Some((position, direction));
+            } else if content.is_wall() {
                 return None;
             }
         }
 
         if position.x < 0 {
-            position.x = ncol - 1;
-        }
-        else if position.x >= ncol {
+            position.x = data.ncol - 1;
+        } else if position.x >= data.ncol {
             position.x = 0;
-        }
-        else if position.y < 0 {
-            position.y = rows - 1;
-        }
-        else if position.y >= rows {
+        } else if position.y < 0 {
+            position.y = data.rows - 1;
+        } else if position.y >= data.rows {
             position.y = 0;
-        }
-        else {
+        } else {
             position = position + direction;
         }
     }
-}
-
-pub fn part2(input: &InputData) -> isize {
-    42
 }
 
 #[cfg(test)]
@@ -307,7 +352,7 @@ mod tests {
     #[test]
     fn example_part2() {
         let input = parse_input(EXAMPLE);
-        assert_eq!(part2(&input), 42);
+        assert_eq!(part2(&input), 5031);
     }
 
     #[test]

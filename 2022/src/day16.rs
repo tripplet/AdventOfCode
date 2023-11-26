@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use nom::{
     bytes::complete::tag,
@@ -8,7 +8,6 @@ use nom::{
     sequence::{terminated, tuple},
     IResult,
 };
-use petgraph::Graph;
 
 use crate::utils::ws;
 
@@ -62,20 +61,47 @@ pub fn parse_input(input: &str) -> ParseResult {
         .collect()
 }
 
-pub fn part1(input: &ParseResult) -> isize {
-    let mut deps = Graph::<&str, &str>::new();
-    for (name, valve) in input {
-        let node = deps.add_node(name);
+fn dfs(graph: &ParseResult, minute: i8, current: &Valve, open_valves: &HashSet<String>) -> u32 {
+    if minute <= 0 || open_valves.is_empty() {
+        return 0;
     }
 
-    for (name, valve) in input {
-        for tunnel in &valve.tunnels_to {
-            deps.update_edge(name, other_node, "tunnel");
+    let mut max_score = 0;
+
+    for tunnel in &current.tunnels_to {
+        let next = &graph[tunnel];
+
+        let mut with_current_valve_open = [0, 0];
+        if open_valves.contains(&current.name) {
+            //dbg!(minute, &current.name, &next.name, closed_valves, &scores);
+
+            // Current valve is still closed
+            let open_valves = &mut open_valves.clone();
+            open_valves.remove(&current.name);
+            with_current_valve_open[0] =
+                (current.flow_rate * (minute - 1) as u16) as u32 + dfs(graph, minute - 2_i8, next, &open_valves);
         }
+        else {
+            with_current_valve_open[1] = dfs(graph, minute - 1, next, open_valves);
+        }
+
+        max_score = max_score.max(with_current_valve_open[0].max(with_current_valve_open[1]));
     }
-    42
+
+    max_score
+}
+
+pub fn part1(input: &ParseResult) -> u32 {
+    let a = input
+        .iter()
+        .filter(|valve| valve.1.flow_rate != 0)
+        .map(|valve| valve.0)
+        .cloned();
+
+    dfs(input, 19, &input["AA"], &HashSet::from_iter(a))
 }
 
 pub fn part2(input: &ParseResult) -> isize {
+    _= input;
     42
 }
