@@ -4,11 +4,7 @@ mod utils;
 // use day01::*;
 
 //const INPUT: &str = include_str!("../input/2023/day1_example.txt");
-const INPUT: &str = include_str!("../input/2023/day1.txt");
-
-use advent_of_code_2023;
-use aoc_runner_derive;
-use aoc_runner;
+//const INPUT: &str = include_str!("../input/2023/day1.txt");
 
 use aoc_runner_derive::aoc_main;
 
