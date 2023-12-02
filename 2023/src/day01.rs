@@ -14,44 +14,58 @@ pub fn part1(input: &ParseResult) -> Number {
     input
         .iter()
         .map(|line| {
-            let digits = line
+            let mut digits = line
                 .chars()
-                .filter(|char| char.is_ascii_digit())
-                .map(|char| char.to_digit(10).unwrap())
-                .collect::<Vec<_>>();
-            digits[0] * 10 + digits.last().unwrap()
+                .filter_map(|char| char.to_digit(10));
+
+            let first = digits.next().unwrap();
+            let last = digits.last();
+
+            first * 10 + last.unwrap_or(first)
         })
         .sum()
 }
 
-const NUMBERS: [&str; 10] = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+const NUMBERS: [&str; 10] = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+];
 
 #[aoc(day1, part2)]
 pub fn part2(input: &ParseResult) -> Number {
     input
         .iter()
         .map(|line| {
-            let mut numbers = vec![];
+            let mut first = None;
+            let mut last = None;
 
             for idx in 0..line.len() {
                 let part_of_line = &line[idx..];
-                let char = part_of_line.chars().next().unwrap();
+                let char = part_of_line.chars().next().unwrap().to_digit(10);
 
-                if char.is_ascii_digit() {
-                    numbers.push((idx, char.to_digit(10).unwrap()));
+                let mut digit = None;
+                if char.is_some() {
+                    digit = char;
                 } else {
-
                     for nb in NUMBERS.iter().enumerate() {
                         if part_of_line.starts_with(nb.1) {
-                            numbers.push((idx, nb.0 as u32));
+                            digit = Some(nb.0 as u32);
+                            break;
                         }
+                    }
+                };
+
+                if digit.is_some() {
+                    if first.is_none() {
+                        first = digit;
+                    }
+                    else {
+                        last = digit;
                     }
                 }
             }
 
-            numbers.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-
-            numbers[0].1 * 10 + numbers.last().unwrap().1
+            let first = first.unwrap();
+            first * 10 + last.unwrap_or(first)
         })
         .sum()
 }
