@@ -1,16 +1,16 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use aoc_runner_derive::aoc;
 use aoc_runner_derive::aoc_generator;
 
+use lazy_static::lazy_static;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, multispace1, u32};
-use nom::combinator::map;
+use nom::combinator::map_res;
 use nom::multi::separated_list1;
 use nom::sequence::{preceded, separated_pair, terminated};
-
-use lazy_static::lazy_static;
 use nom::IResult;
 
 use crate::utils::ws;
@@ -31,6 +31,19 @@ pub enum Color {
     Blue,
 }
 
+impl FromStr for Color {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "red" => Color::Red,
+            "green" => Color::Green,
+            "blue" => Color::Blue,
+            _ => return Err("Invalid color"),
+        })
+    }
+}
+
 impl Game {
     fn parse(input: &str) -> IResult<&str, Self> {
         let (s, number) = preceded(ws(tag("Game")), terminated(u32, ws(char(':'))))(input)?;
@@ -41,12 +54,7 @@ impl Game {
                 separated_pair(
                     u32,
                     multispace1,
-                    map(alt((tag("red"), tag("green"), tag("blue"))), |color| match color {
-                        "red" => Color::Red,
-                        "green" => Color::Green,
-                        "blue" => Color::Blue,
-                        _ => unreachable!(),
-                    }),
+                    map_res(alt((tag("red"), tag("green"), tag("blue"))), Color::from_str),
                 ),
             ),
         )(s)?;
@@ -85,11 +93,9 @@ pub fn part1(input: &ParseResult) -> Number {
         .iter()
         .filter(|&game| {
             game.reveals.iter().all(|game| {
-                ALL_COLORS.iter().all(|color|
-                    game.get(&color)
-                    .map(|&b| b <= VALID_PART1[&color])
-                    .unwrap_or(true)
-                )
+                ALL_COLORS
+                    .iter()
+                    .all(|color| game.get(&color).map(|&b| b <= VALID_PART1[&color]).unwrap_or(true))
             })
         })
         .map(|game| game.number)
