@@ -4,7 +4,7 @@ use aoc_runner_derive::aoc;
 use aoc_runner_derive::aoc_generator;
 
 use nom::bytes::complete::tag;
-use nom::character::complete::{char, line_ending, multispace1, u16};
+use nom::character::complete::{char, line_ending, space1, u16};
 use nom::multi::{separated_list0, separated_list1};
 use nom::sequence::{preceded, separated_pair, terminated};
 use nom::IResult;
@@ -22,17 +22,18 @@ pub struct Card {
 
 #[aoc_generator(day4)]
 pub fn parse_input(input: &str) -> ParseResult {
-    let (_, cards) = separated_list1(line_ending, Card::parse)(input.trim()).expect("aoc has only valid input data");
-    cards
+    separated_list1(line_ending, Card::parse)(input.trim())
+        .expect("aoc has only valid input data")
+        .1
 }
 
 impl Card {
     fn parse(s: &str) -> IResult<&str, Self> {
         let (s, number) = preceded(ws(tag("Card")), terminated(u16, ws(char(':'))))(s)?;
         let (s, (winning_numbers, own_numbers)) = separated_pair(
-            separated_list0(multispace1, u16),
+            separated_list0(space1, u16),
             ws(char('|')),
-            separated_list0(multispace1, u16),
+            separated_list0(space1, u16),
         )(s)?;
 
         Ok((
@@ -58,10 +59,10 @@ pub fn part1(input: &ParseResult) -> u32 {
     input
         .iter()
         .filter_map(|card| {
-            let winning_number_count = card.wins();
+            let wins = card.wins();
 
-            if winning_number_count > 0 {
-                Some(2_u32.pow(winning_number_count as u32 - 1))
+            if wins > 0 {
+                Some(2_u32.pow(wins as u32 - 1))
             } else {
                 None
             }
