@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use aoc_runner_derive::aoc;
-use aoc_runner_derive::aoc_generator;
+use aoc_runner_derive::{aoc, aoc_generator};
 
 use lazy_static::lazy_static;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::character::complete::{char, multispace1, u32};
+use nom::character::complete::{char, space1, u32};
 use nom::combinator::map_res;
 use nom::multi::separated_list1;
 use nom::sequence::{preceded, separated_pair, terminated};
@@ -53,7 +52,7 @@ impl Game {
                 ws(char(',')),
                 separated_pair(
                     u32,
-                    multispace1,
+                    space1,
                     map_res(alt((tag("red"), tag("green"), tag("blue"))), Color::from_str),
                 ),
             ),

@@ -1,5 +1,4 @@
-use aoc_runner_derive::aoc;
-use aoc_runner_derive::aoc_generator;
+use aoc_runner_derive::{aoc, aoc_generator};
 
 use regex::Regex;
 
@@ -18,41 +17,52 @@ pub fn parse_input(input: &str) -> ParseResult {
     let re = Regex::new(r"\s+(?P<value>[[:digit:]]+)").unwrap();
 
     let number = |s: &str| -> Vec<Number> {
-        re.captures_iter(s).map(|cap| cap.name("value").unwrap().as_str().parse::<Number>().unwrap()).collect()
+        re.captures_iter(s)
+            .map(|cap| cap.name("value").unwrap().as_str().parse::<Number>().unwrap())
+            .collect()
     };
 
     let times = number(lines.next().unwrap());
     let distances = number(lines.next().unwrap());
 
-    times.into_iter().zip(distances).map(|(time, distance)| Game { time, distance }).collect()
+    times
+        .into_iter()
+        .zip(distances)
+        .map(|(time, distance)| Game { time, distance })
+        .collect()
 }
 
 #[aoc(day6, part1)]
 pub fn part1(input: &ParseResult) -> Number {
-    input.iter().map(|game| {
-        let (min, max) = solve_equation(game.time, game.distance);
-        max - min + 1
-    }).product()
+    input
+        .iter()
+        .map(|game| {
+            let (min, max) = solve_equation(game.time, game.distance);
+            max - min + 1
+        })
+        .product()
 }
 
 #[inline(always)]
-fn solve_equation(time: Number, distance: Number) -> (Number, Number)
-{
+fn solve_equation(time: Number, distance: Number) -> (Number, Number) {
     let (min, max) = solve_quadratic(-1, time as i64, -(distance as i64));
     (min.floor() as Number + 1, max.ceil() as Number - 1)
 }
 
 #[inline(always)]
 fn solve_quadratic(a: i64, b: i64, c: i64) -> (f32, f32) {
-    let inter = ((b*b - 4*a*c) as f32).sqrt();
-    ((-b as f32 + inter) / (2.0 * (a as f32)), (-b as f32 - inter) / (2.0 * (a as f32)))
+    let inter = ((b * b - 4 * a * c) as f32).sqrt();
+    (
+        (-b as f32 + inter) / (2.0 * (a as f32)),
+        (-b as f32 - inter) / (2.0 * (a as f32)),
+    )
 }
 
 #[aoc(day6, part2)]
 pub fn part2(input: &ParseResult) -> Number {
     let a = input.iter().cloned().reduce(|acc, game| Game {
         time: format!("{}{}", acc.time, game.time).parse::<Number>().unwrap(),
-        distance: format!("{}{}", acc.distance, game.distance).parse::<Number>().unwrap()
+        distance: format!("{}{}", acc.distance, game.distance).parse::<Number>().unwrap(),
     });
 
     part1(&vec![a.unwrap()])

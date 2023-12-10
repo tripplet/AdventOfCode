@@ -1,16 +1,10 @@
 use std::ops::Range;
 
-use aoc_runner_derive::aoc;
-use aoc_runner_derive::aoc_generator;
+use aoc_runner_derive::{aoc, aoc_generator};
 use nom::bytes::complete::tag;
-use nom::character::complete::line_ending;
-use nom::character::complete::not_line_ending;
-use nom::character::complete::space1;
-use nom::character::complete::u64;
-use nom::multi::count;
-use nom::multi::separated_list1;
-use nom::sequence::preceded;
-use nom::sequence::terminated;
+use nom::character::complete::{line_ending, not_line_ending, space1, u64};
+use nom::multi::{count, separated_list1};
+use nom::sequence::{preceded, terminated};
 use nom::IResult;
 
 type Number = u64;

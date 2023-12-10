@@ -1,8 +1,7 @@
 use std::collections::hash_map::Iter;
 use std::collections::HashMap;
 
-use aoc_runner_derive::aoc;
-use aoc_runner_derive::aoc_generator;
+use aoc_runner_derive::{aoc, aoc_generator};
 
 type Number = i16;
 type ParseResult = Schematic;
@@ -31,10 +30,10 @@ impl Value {
     }
 
     fn from_digits(digits: &[u16], x: Number, len: u8) -> Self {
-        Value::Number{
+        Value::Number {
             start_x: x,
             len,
-            value: vec_to_number(digits)
+            value: vec_to_number(digits),
         }
     }
 }

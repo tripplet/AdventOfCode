@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
-use aoc_runner_derive::aoc;
-use aoc_runner_derive::aoc_generator;
+use aoc_runner_derive::{aoc, aoc_generator};
 
 use nom::bytes::complete::tag;
 use nom::character::complete::{char, line_ending, space1, u16};

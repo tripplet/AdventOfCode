@@ -1,5 +1,4 @@
-use aoc_runner_derive::aoc;
-use aoc_runner_derive::aoc_generator;
+use aoc_runner_derive::{aoc, aoc_generator};
 
 type Number = u32;
 type ParseResult = Vec<String>;
@@ -14,9 +13,7 @@ pub fn part1(input: &ParseResult) -> Number {
     input
         .iter()
         .map(|line| {
-            let mut digits = line
-                .chars()
-                .filter_map(|char| char.to_digit(10));
+            let mut digits = line.chars().filter_map(|char| char.to_digit(10));
 
             let first = digits.next().unwrap();
             let last = digits.last();
@@ -57,8 +54,7 @@ pub fn part2(input: &ParseResult) -> Number {
                 if digit.is_some() {
                     if first.is_none() {
                         first = digit;
-                    }
-                    else {
+                    } else {
                         last = digit;
                     }
                 }
