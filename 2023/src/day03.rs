@@ -24,20 +24,6 @@ pub enum Value {
     Symbol(char),
 }
 
-impl Value {
-    fn from_char(c: char) -> Self {
-        Value::Symbol(c)
-    }
-
-    fn from_digits(digits: &[u16], x: Number, len: u8) -> Self {
-        Value::Number {
-            start_x: x,
-            len,
-            value: vec_to_number(digits),
-        }
-    }
-}
-
 #[aoc_generator(day3)]
 pub fn parse_input(input: &str) -> ParseResult {
     let mut schematic = Schematic {
@@ -234,9 +220,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "reason"]
     fn input_part2() {
         let input = parse_input(INPUT);
-        assert_eq!(part2(&input), 42);
+        assert_eq!(part2(&input), 86879020);
     }
 }

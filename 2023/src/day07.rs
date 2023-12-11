@@ -329,6 +329,6 @@ mod tests {
     #[test]
     fn input_part2() {
         let input = parse_input(INPUT);
-        assert_eq!(part2(&input), 42);
+        assert_eq!(part2(&input), 254494947);
     }
 }

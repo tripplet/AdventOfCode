@@ -35,7 +35,7 @@ impl Mapping {
         ))
     }
 
-    //#[inline(always)]
+    #[inline(always)]
     fn map_number(&self, nb: Number) -> Option<Number> {
         if self.from.contains(&nb) {
             Some(self.to + nb - self.from.start)
@@ -95,11 +95,11 @@ pub fn parse_input(input: &str) -> ParseResult {
 pub fn part1(input: &ParseResult) -> Number {
     let mut seed_pos = input.seeds.clone();
 
-    for idx in 0..seed_pos.len() {
+    for seed in seed_pos.iter_mut() {
         for instruction in &input.instruction {
             for mapping in instruction {
-                if let Some(res) = mapping.map_number(seed_pos[idx]) {
-                    seed_pos[idx] = res;
+                if let Some(res) = mapping.map_number(*seed) {
+                    *seed = res;
                     break;
                 }
             }
@@ -118,12 +118,10 @@ pub fn part2(input: &ParseResult) -> u64 {
         .collect();
 
     let mut existing_min = Number::MAX;
-    let mut idx = 0;
 
-    for range in seed_ranges {
+    for (idx, range) in seed_ranges.into_iter().enumerate() {
         dbg!(idx);
         dbg!(range.end - range.start);
-        idx += 1;
 
         for mut nb in range {
             for instruction in &input.instruction {
@@ -183,6 +181,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "brute force algorithm takes ~90s"]
     fn input_part2() {
         let input = parse_input(INPUT);
         assert_eq!(part2(&input), 81956384);

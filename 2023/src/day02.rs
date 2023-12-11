@@ -94,7 +94,7 @@ pub fn part1(input: &ParseResult) -> Number {
             game.reveals.iter().all(|game| {
                 ALL_COLORS
                     .iter()
-                    .all(|color| game.get(&color).map(|&b| b <= VALID_PART1[&color]).unwrap_or(true))
+                    .all(|color| game.get(color).map(|&b| b <= VALID_PART1[&color]).unwrap_or(true))
             })
         })
         .map(|game| game.number)
