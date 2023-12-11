@@ -1,4 +1,7 @@
-use nom::{character::complete::multispace0, error::ParseError, sequence::delimited, IResult};
+use nom::character::complete::multispace0;
+use nom::error::ParseError;
+use nom::sequence::delimited;
+use nom::IResult;
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
 /// trailing whitespace, returning the output of `inner`.
