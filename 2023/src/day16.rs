@@ -1,7 +1,5 @@
-use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr,
-};
+use std::collections::{HashMap, HashSet};
+use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use itertools::Itertools;
@@ -52,90 +50,80 @@ pub fn parse_input(input: &str) -> ParseResult {
 
 fn add_ray(
     rays: &mut HashMap<(Number, Number), HashSet<(Number, Number)>>,
-    (y, x): (Number, Number),
-    (dy, dx): (Number, Number),
+    pos: (Number, Number),
+    direction: (Number, Number),
 ) -> bool {
-    if let Some(existing_rays) = rays.get_mut(&(y, x)) {
-        if existing_rays.contains(&(dy, dx)) {
+    if let Some(existing_rays) = rays.get_mut(&pos) {
+        if existing_rays.contains(&direction) {
             return false;
         }
 
-        existing_rays.insert((dy, dx));
+        existing_rays.insert(direction);
         return true;
     }
 
-    rays.insert((y, x), HashSet::from([(dy, dx)]));
-    return true;
+    rays.insert(pos, HashSet::from([direction]));
+    true
 }
 
 fn propagate_ray(
     grid: &Array2<Shape>,
     rays: &mut HashMap<(Number, Number), HashSet<(Number, Number)>>,
-    (mut y, mut x): (Number, Number),
-    (mut dy, mut dx): (Number, Number),
+    mut pos: (Number, Number),
+    mut direction: (Number, Number),
 ) {
     loop {
-        if x < 0 || y < 0 || x >= grid.ncols() as Number || y >= grid.nrows() as Number {
+        if pos.0 < 0 || pos.1 < 0 || pos.0 >= grid.nrows() as Number || pos.1 >= grid.ncols() as Number {
             return;
         }
 
-        let cur = grid[[y as usize, x as usize]];
-
-        if !add_ray(rays, (y, x), (dy, dx)) {
+        let cur = grid[[pos.0 as usize, pos.1 as usize]];
+        if !add_ray(rays, pos, direction) {
             return;
         }
 
         match cur {
-            Shape::Empty => {
-                y += dy;
-                x += dx;
-            }
+            Shape::Empty => {}
             Shape::MirrorDLUR => {
-                (dy, dx) = match (dy, dx) {
+                direction = match direction {
                     RIGHT => UP,
                     LEFT => DOWN,
                     DOWN => LEFT,
                     UP => RIGHT,
                     _ => panic!("Should not appear"),
                 };
-
-                y += dy;
-                x += dx;
             }
             Shape::MirrorULDR => {
-                (dy, dx) = match (dy, dx) {
+                direction = match direction {
                     RIGHT => DOWN,
                     LEFT => UP,
                     DOWN => RIGHT,
                     UP => LEFT,
                     _ => panic!("Should not appear"),
                 };
-                y += dy;
-                x += dx;
             }
-            Shape::SplitterVertical => match (dy, dx) {
-                DOWN | UP => {
-                    y += dy;
-                }
+            Shape::SplitterVertical => match direction {
+                DOWN | UP => {}
                 LEFT | RIGHT => {
-                    propagate_ray(grid, rays, (y, x), UP);
-                    propagate_ray(grid, rays, (y, x), DOWN);
+                    propagate_ray(grid, rays, pos, UP);
+                    propagate_ray(grid, rays, pos, DOWN);
                     return;
                 }
                 _ => panic!("Should not appear"),
             },
-            Shape::SplitterHorizontal => match (dy, dx) {
-                LEFT | RIGHT => {
-                    x += dx;
-                }
+            Shape::SplitterHorizontal => match direction {
+                LEFT | RIGHT => {}
                 UP | DOWN => {
-                    propagate_ray(grid, rays, (y, x), LEFT);
-                    propagate_ray(grid, rays, (y, x), RIGHT);
+                    propagate_ray(grid, rays, pos, LEFT);
+                    propagate_ray(grid, rays, pos, RIGHT);
                     return;
                 }
                 _ => panic!("Should not appear"),
             },
         }
+
+        pos.0 += direction.0;
+        pos.1 += direction.1;
     }
 }
 
@@ -148,26 +136,31 @@ pub fn part1(grid: &ParseResult) -> usize {
 
 #[aoc(day16, part2)]
 pub fn part2(grid: &ParseResult) -> usize {
-    let starts = (1..grid.nrows() -1).map(|x| vec![((0, x), DOWN), ((grid.ncols(), x), UP)])
-    .chain(
-        (1..grid.ncols() -1).map(|y| vec![((y, 0), RIGHT), ((y, grid.nrows()), LEFT)])
-    ).flatten().chain(vec![
-        ((0, 0), RIGHT),
-        ((0, 0), DOWN),
-        ((grid.nrows(), 0), RIGHT),
-        ((grid.nrows(), 0), UP),
-        ((0, grid.ncols()), LEFT),
-        ((0, grid.ncols()), DOWN),
-        ((grid.nrows(), grid.ncols()), LEFT),
-        ((grid.nrows(), grid.ncols()), UP),
-    ].into_iter()).collect_vec();
+    let starts = (1..grid.nrows() - 1)
+        .map(|x| vec![((0, x), DOWN), ((grid.ncols(), x), UP)])
+        .chain((1..grid.ncols() - 1).map(|y| vec![((y, 0), RIGHT), ((y, grid.nrows()), LEFT)]))
+        .flatten()
+        .chain(vec![
+            ((0, 0), RIGHT),
+            ((0, 0), DOWN),
+            ((grid.nrows(), 0), RIGHT),
+            ((grid.nrows(), 0), UP),
+            ((0, grid.ncols()), LEFT),
+            ((0, grid.ncols()), DOWN),
+            ((grid.nrows(), grid.ncols()), LEFT),
+            ((grid.nrows(), grid.ncols()), UP),
+        ])
+        .collect_vec();
 
-    starts.par_iter().map(|start|
-    {
-        let mut rays: HashMap<(i16, i16), HashSet<(i16, i16)>> = HashMap::new();
-        propagate_ray(grid, &mut rays, (start.0.0 as Number, start.0.1 as Number), start.1);
-        rays.keys().len()
-    }).max().unwrap()
+    starts
+        .par_iter()
+        .map(|start| {
+            let mut rays: HashMap<(i16, i16), HashSet<(i16, i16)>> = HashMap::new();
+            propagate_ray(grid, &mut rays, (start.0 .0 as Number, start.0 .1 as Number), start.1);
+            rays.keys().len()
+        })
+        .max()
+        .unwrap()
 }
 
 #[cfg(test)]
