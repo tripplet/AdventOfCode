@@ -34,13 +34,13 @@ mod tests {
     //#[test]
     fn input_part1() {
         let input = parse_input(INPUT);
-        assert_eq!(part1(&input), 42);
+        assert_eq!(part1(&input), todo!());
     }
 
     //#[test]
     fn example_part2() {
         let input = parse_input(EXAMPLE);
-        assert_eq!(part2(&input), 42);
+        assert_eq!(part2(&input), todo!());
     }
 
     //#[test]
