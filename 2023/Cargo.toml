@@ -21,6 +21,8 @@ strum = "0.25.0"
 strum_macros = "0.25.3"
 aoc-runner = "0.3.0"
 aoc-runner-derive = "0.3.0"
+glam = "0.25.0"
+dyn-clone = "1.0.16"
 
 [[bin]]
 name = "aoc"
