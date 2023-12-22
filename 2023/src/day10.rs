@@ -6,7 +6,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use ndarray::Array2;
-use strum_macros::{EnumString, Display};
+use strum_macros::{Display, EnumString};
 use tinyvec::{array_vec, ArrayVec};
 
 type Number = i16;
@@ -208,23 +208,25 @@ pub fn part2(input: &ParseResult) -> isize {
     // Create a new grid with a border around
     let mut grid = Array2::from_elem((nrows + 2, ncols + 2), Symbol::FilledInProgress);
 
-    for y in  0..input.grid.nrows() {
+    for y in 0..input.grid.nrows() {
         for x in 0..input.grid.ncols() {
-            if !loop_path.contains(&Point {y: y as Number, x: x as Number}) {
+            if !loop_path.contains(&Point {
+                y: y as Number,
+                x: x as Number,
+            }) {
                 grid[[y + 1, x + 1]] = Symbol::Ground;
-            }
-            else {
+            } else {
                 grid[[y + 1, x + 1]] = input.grid[[y, x]];
             }
         }
     }
 
-    for y in  0..grid.nrows() {
-        for x in 0..grid.ncols() {
-            print!("{}", grid[[y, x]])
-        }
-        println!()
-    }
+    // for y in  0..grid.nrows() {
+    //     for x in 0..grid.ncols() {
+    //         print!("{}", grid[[y, x]])
+    //     }
+    //     println!()
+    // }
 
     12
 }

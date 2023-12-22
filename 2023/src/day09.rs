@@ -1,9 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use nom::{
-    character::complete::{i64, line_ending, space1},
-    multi::separated_list1,
-    IResult,
-};
+use nom::character::complete::{i64, line_ending, space1};
+use nom::multi::separated_list1;
+use nom::IResult;
 
 type Number = i64;
 type ParseResult = Vec<Vec<Number>>;

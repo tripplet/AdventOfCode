@@ -18,7 +18,9 @@ const UP1: IVec2 = ivec2(0, -1);
 const UP2: IVec2 = ivec2(0, -2);
 const UP3: IVec2 = ivec2(0, -3);
 
-const ADJACENT: [IVec2; 12] = [UP1, UP2, UP3, DOWN1, DOWN2, DOWN3, LEFT1, LEFT2, LEFT3, RIGHT1, RIGHT2, RIGHT3];
+const ADJACENT: [IVec2; 12] = [
+    UP1, UP2, UP3, DOWN1, DOWN2, DOWN3, LEFT1, LEFT2, LEFT3, RIGHT1, RIGHT2, RIGHT3,
+];
 
 #[aoc_generator(day17)]
 pub fn parse_input(input: &str) -> ParseResult {
@@ -50,11 +52,9 @@ fn is_valid(pos: IVec2, direction: IVec2, dim: IVec2, past_moves: &Array2<Vec<(u
         let dot = prev_move.1.dot(direction);
         if dot == 0 {
             return Some((prev_move.0, new_pos));
-        }
-        else if dot > 0 && prev_move.1.abs().max_element()+direction.abs().max_element() <= 3{
+        } else if dot > 0 && prev_move.1.abs().max_element() + direction.abs().max_element() <= 3 {
             return Some((prev_move.0, new_pos));
-        }
-        else {
+        } else {
             return None;
         }
     }
@@ -70,15 +70,13 @@ fn print_dist(array: &Array2<u32>) {
             let v = array[[y as usize, x as usize]];
             if v == u32::MAX {
                 print!("    ")
-            }
-            else {
+            } else {
                 print!("{:3} ", v)
             }
         }
         println!()
     }
 }
-
 
 fn print_moves(array: &Array2<Option<IVec2>>) {
     let dim = ivec2(array.ncols() as i32, array.nrows() as i32);
@@ -87,8 +85,7 @@ fn print_moves(array: &Array2<Option<IVec2>>) {
         for x in 0..dim.x {
             if let Some(v) = array[[y as usize, x as usize]] {
                 print!("{}", v);
-            }
-            else {
+            } else {
                 print!("  ");
             }
         }
@@ -163,7 +160,6 @@ pub fn part1(input: &ParseResult) -> u32 {
                 println!();
 
                 //print_moves(&last_moves);
-
             }
         }
     }
@@ -189,8 +185,7 @@ pub fn part1(input: &ParseResult) -> u32 {
     //     println!();
     // }
 
-
-    dist[[dist.nrows() -1, dist.ncols() -1]]
+    dist[[dist.nrows() - 1, dist.ncols() - 1]]
 }
 
 #[aoc(day17, part2)]

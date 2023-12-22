@@ -1,7 +1,5 @@
-use std::{
-    collections::HashSet,
-    mem::swap,
-};
+use std::collections::HashSet;
+use std::mem::swap;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use glam::{ivec2, IVec2};

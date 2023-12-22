@@ -290,9 +290,9 @@ pub fn part2(input: &ParseResult) -> usize {
     decks.iter_mut().for_each(Deck::score_part2);
     decks.sort();
 
-    for deck in &decks {
-        println!("{}, {:?}", deck.cards.iter().join(""), deck.score.as_ref().unwrap());
-    }
+    // for deck in &decks {
+    //     println!("{}, {:?}", deck.cards.iter().join(""), deck.score.as_ref().unwrap());
+    // }
 
     decks
         .iter()

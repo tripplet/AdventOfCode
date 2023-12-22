@@ -139,18 +139,7 @@ fn five_times<T: Copy>(input: &[T], sep: Option<T>) -> Vec<T> {
 
 #[aoc(day12, part2)]
 pub fn part2(input: &ParseResult) -> usize {
-    input
-        .par_iter()
-        //.inspect(|x| println!("{x:?}"))
-        .map(|(conditions, damage_data)| {
-            possibilities(
-                &five_times(conditions, Some(SpringState::Unknown)),
-                &five_times(damage_data, None),
-            ) as usize
-        })
-        //.inspect(|x| println!("{x}"))
-        .sum::<usize>();
-    12
+    todo!()
 }
 
 #[cfg(test)]
