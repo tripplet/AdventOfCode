@@ -1,5 +1,4 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use itertools::Itertools;
 
 type Number = u32;
 type ParseResult = Vec<(Number, Number)>;

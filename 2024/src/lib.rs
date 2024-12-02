@@ -1,7 +1,10 @@
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::missing_panics_doc)]
+
 use aoc_runner_derive::aoc_lib;
 
 pub mod day01;
-// pub mod day02;
+pub mod day02;
 // pub mod day03;
 // pub mod day04;
 // pub mod day05;

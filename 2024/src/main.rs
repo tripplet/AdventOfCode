@@ -1,8 +1,6 @@
 //mod utils;
-
 //const INPUT: &str = include_str!("../input/2023/day1_example.txt");
 //const INPUT: &str = include_str!("../input/2024/day1.txt");
-
 use aoc_runner_derive::aoc_main;
 
 aoc_main! { lib = advent_of_code_2024 }
