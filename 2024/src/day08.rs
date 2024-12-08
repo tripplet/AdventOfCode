@@ -79,35 +79,23 @@ pub fn part2(input: &ParseResult) -> usize {
 
             let delta = *antenna1 - *antenna2;
 
-            for times in 1.. {
+            for times in 0.. {
                 let tmp1 = *antenna1 + delta*times;
-                let tmp2 = *antenna2 - delta*times;
-                let tmp3 = *antenna1 - delta*times;
-                let tmp4 = *antenna2 + delta*times;
+                let tmp2 = *antenna1 - delta*times;
 
-                let mut none_inside = true;
+                let mut antinode_found = false;
 
                 if is_inside(tmp1) {
                     antinodes.insert(tmp1);
-                    none_inside = false;
+                    antinode_found = true;
                 }
 
                 if is_inside(tmp2) {
                     antinodes.insert(tmp2);
-                    none_inside = false;
+                    antinode_found = true;
                 }
 
-                if is_inside(tmp3) {
-                    antinodes.insert(tmp3);
-                    none_inside = false;
-                }
-
-                if is_inside(tmp4) {
-                    antinodes.insert(tmp4);
-                    none_inside = false;
-                }
-
-                if none_inside {
+                if !antinode_found {
                     break;
                 }
             }
@@ -142,9 +130,9 @@ mod tests {
         assert_eq!(part2(&input), 34);
     }
 
-    //#[test]
+    #[test]
     fn input_part2() {
         let input = parse_input(INPUT);
-        assert_eq!(part2(&input), todo!());
+        assert_eq!(part2(&input), 1308);
     }
 }
