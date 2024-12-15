@@ -14,7 +14,10 @@ pub struct ParseResult {
 pub fn parse_input(input: &str) -> ParseResult {
     let mut result = ParseResult {
         antennas: HashMap::new(),
-        dimensions: ivec2(input.lines().count() as i32, input.trim().lines().next().unwrap().len() as i32),
+        dimensions: ivec2(
+            input.lines().count() as i32,
+            input.trim().lines().next().unwrap().len() as i32,
+        ),
     };
 
     input
@@ -37,29 +40,30 @@ pub fn parse_input(input: &str) -> ParseResult {
     result
 }
 
+impl ParseResult {
+    fn is_inside(&self, pos: IVec2) -> bool {
+        pos.y >= 0 && pos.x >= 0 && pos.y < self.dimensions.y && pos.x < self.dimensions.x
+    }
+
+    fn add_if_inside(&self, pos: IVec2, dest: &mut HashSet<IVec2>) -> bool {
+        if self.is_inside(pos) {
+            dest.insert(pos);
+            true
+        } else {
+            false
+        }
+    }
+}
+
 #[aoc(day8, part1)]
 pub fn part1(input: &ParseResult) -> usize {
     let mut antinodes = HashSet::new();
 
-    let is_inside = |pos: IVec2| {
-        pos.y >= 0 && pos.x >= 0 && pos.y < input.dimensions.y && pos.x < input.dimensions.x
-    };
-
-    for (_frequency, antennas) in &input.antennas {
-        for (antenna1, antenna2) in  antennas.iter().tuple_combinations() {
-
+    for antennas in input.antennas.values() {
+        for (antenna1, antenna2) in antennas.iter().tuple_combinations() {
             let delta = *antenna1 - *antenna2;
-
-            let tmp1 = *antenna1 + delta;
-            let tmp2 = *antenna2 - delta;
-
-            if is_inside(tmp1) {
-                antinodes.insert(tmp1);
-            }
-
-            if is_inside(tmp2) {
-                antinodes.insert(tmp2);
-            }
+            input.add_if_inside(*antenna1 + delta, &mut antinodes);
+            input.add_if_inside(*antenna2 - delta, &mut antinodes);
         }
     }
 
@@ -70,32 +74,13 @@ pub fn part1(input: &ParseResult) -> usize {
 pub fn part2(input: &ParseResult) -> usize {
     let mut antinodes = HashSet::new();
 
-    let is_inside = |pos: IVec2| {
-        pos.y >= 0 && pos.x >= 0 && pos.y < input.dimensions.y && pos.x < input.dimensions.x
-    };
-
-    for (_frequency, antennas) in &input.antennas {
-        for (antenna1, antenna2) in  antennas.iter().tuple_combinations() {
-
+    for antennas in input.antennas.values() {
+        for (antenna1, antenna2) in antennas.iter().tuple_combinations() {
             let delta = *antenna1 - *antenna2;
-
             for times in 0.. {
-                let tmp1 = *antenna1 + delta*times;
-                let tmp2 = *antenna1 - delta*times;
-
-                let mut antinode_found = false;
-
-                if is_inside(tmp1) {
-                    antinodes.insert(tmp1);
-                    antinode_found = true;
-                }
-
-                if is_inside(tmp2) {
-                    antinodes.insert(tmp2);
-                    antinode_found = true;
-                }
-
-                if !antinode_found {
+                if !(input.add_if_inside(*antenna1 + delta * times, &mut antinodes)
+                    | input.add_if_inside(*antenna1 - delta * times, &mut antinodes))
+                {
                     break;
                 }
             }

@@ -2,6 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 type Number = u64;
 type ParseResult = Vec<Operation>;
 
+#[derive(Debug)]
 pub struct Operation {
     result: Number,
     values: Vec<Number>,
@@ -40,9 +41,9 @@ pub fn part2(input: &ParseResult) -> Number {
         .sum()
 }
 
-fn try_check(operation: &Operation, total: Number, pos: usize, use_concat: bool) -> bool {
+fn try_check(operation: &Operation, total: Number, pos: usize, allow_concat: bool) -> bool {
     if pos == 0 {
-        return try_check(operation, operation.values[0], 1, use_concat);
+        return try_check(operation, operation.values[0], 1, allow_concat);
     }
 
     if pos == operation.values.len() {
@@ -53,14 +54,13 @@ fn try_check(operation: &Operation, total: Number, pos: usize, use_concat: bool)
         return false;
     }
 
-    if try_check(operation, total + operation.values[pos], pos + 1, use_concat)
-        || try_check(operation, total * operation.values[pos], pos + 1, use_concat)
+    if try_check(operation, total + operation.values[pos], pos + 1, allow_concat)
+        || try_check(operation, total * operation.values[pos], pos + 1, allow_concat)
     {
         return true;
-    } else if use_concat {
+    } else if allow_concat {
         let log = (operation.values[pos] as f64).log10().floor() as u32 + 1;
         let concated = 10u64.pow(log) * total + operation.values[pos];
-
         return try_check(operation, concated, pos + 1, true);
     }
 

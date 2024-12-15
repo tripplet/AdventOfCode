@@ -1,9 +1,12 @@
-use std::fmt::{self, Debug};
+use std::{
+    collections::HashSet,
+    fmt::{self, Debug, Display},
+};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use enumflags2::{make_bitflags, BitFlags};
+use glam::{ivec2, IVec2};
 use itertools::iproduct;
-use nalgebra::Vector2;
 use ndarray::{Array, Array2, Ix2};
 use rayon::prelude::*;
 
@@ -28,7 +31,7 @@ pub enum Direction {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Guard {
-    pos: Vector2<i32>,
+    pos: IVec2,
     direction: Direction,
 }
 
@@ -36,6 +39,33 @@ struct Guard {
 pub struct ParseResult {
     grid: Array2<Tile>,
     guard_pos: Guard,
+}
+
+impl Display for ParseResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for y in 0..self.grid.shape()[0] {
+            for x in 0..self.grid.shape()[1] {
+                write!(f, "{}", self.grid[(y, x)])?;
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Display for Tile {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Tile::Empty => " ",
+                Tile::Wall => "#",
+                Tile::Guard => "x",
+            }
+        )
+    }
 }
 
 impl Tile {
@@ -50,23 +80,23 @@ impl Tile {
 }
 
 impl Direction {
-    fn vec(self) -> Vector2<i32> {
+    fn vec(self) -> IVec2 {
         match self {
-            Self::UP => Vector2::y() * -1,
-            Self::DOWN => Vector2::y(),
-            Self::LEFT => Vector2::x() * -1,
-            Self::RIGHT => Vector2::x(),
-            Self::NONE => panic!()
+            Self::UP => IVec2::NEG_Y,
+            Self::DOWN => IVec2::Y,
+            Self::LEFT => IVec2::NEG_X,
+            Self::RIGHT => IVec2::X,
+            Self::NONE => panic!(),
         }
     }
 
-    fn roate_right(self) -> Self {
+    fn rotate_right(self) -> Self {
         match self {
             Self::UP => Self::RIGHT,
             Self::DOWN => Self::LEFT,
             Self::LEFT => Self::UP,
             Self::RIGHT => Self::DOWN,
-            Self::NONE => panic!()
+            Self::NONE => panic!(),
         }
     }
 }
@@ -110,7 +140,7 @@ impl Guard {
                     return Some((
                         Guard {
                             pos: self.pos,
-                            direction: self.direction.roate_right(),
+                            direction: self.direction.rotate_right(),
                         },
                         true,
                     ));
@@ -140,7 +170,7 @@ pub fn parse_input(input: &str) -> ParseResult {
     ParseResult {
         grid,
         guard_pos: Guard {
-            pos: Vector2::new(guard_pos.1 as i32, guard_pos.0 as i32),
+            pos: ivec2(guard_pos.1 as i32, guard_pos.0 as i32),
             direction: Direction::UP,
         },
     }
@@ -175,7 +205,7 @@ fn is_loop(lab: &ParseResult, visited: &mut Array2<BitFlags<Direction>>) -> bool
 
     loop {
         let Some((next, _)) = pos.move_next(&lab.grid) else {
-            break;
+            return false;
         };
 
         let visited_tile = visited.get_mut(next.pos_vec()).unwrap();
@@ -187,8 +217,13 @@ fn is_loop(lab: &ParseResult, visited: &mut Array2<BitFlags<Direction>>) -> bool
 
         pos = next;
     }
+}
 
-    false
+fn clear_array<T>(array: &mut Array2<T>, value: T)
+where
+    T: Copy,
+{
+    array.iter_mut().for_each(|x| *x = value);
 }
 
 #[aoc(day6, part2, BruteForce)]
@@ -202,14 +237,11 @@ pub fn part2(input: &ParseResult) -> usize {
         .unwrap();
 
     for (y, x) in iproduct!(0..input.grid.shape()[0], 0..input.grid.shape()[1]) {
-        if input.grid[(y, x)] == Tile::Wall
-            || (y, x) == input.guard_pos.pos_vec()
-            || !visted_in_part1[(y, x)]
-        {
+        if input.grid[(y, x)] == Tile::Wall || (y, x) == input.guard_pos.pos_vec() || !visted_in_part1[(y, x)] {
             continue;
         }
 
-        visited.iter_mut().for_each(|x| *x = make_bitflags!(Direction::{NONE}));
+        clear_array(&mut visited, make_bitflags!(Direction::{NONE}));
 
         let mut lab = input.clone();
         *lab.grid.get_mut((y, x)).unwrap() = Tile::Wall;
@@ -224,37 +256,54 @@ pub fn part2(input: &ParseResult) -> usize {
 
 #[aoc(day6, part2, Cleverer)]
 pub fn part2_clever(input: &ParseResult) -> usize {
-    let mut loops = 0;
-    let mut guard_start_pos = input.guard_pos;
+    let mut guard = input.guard_pos;
+
+    let mut placed_walls = HashSet::<IVec2>::new();
 
     let mut visited = Array::from_elem(input.grid.shape(), make_bitflags!(Direction::{NONE}))
         .into_dimensionality::<Ix2>()
         .unwrap();
 
     loop {
-        let Some((infront, only_rotated)) = guard_start_pos.move_next(&input.grid) else {
+        // Next possible position of the guard
+        let Some((infront, was_already_blocked)) = guard.move_next(&input.grid) else {
             break;
         };
 
-        if only_rotated {
-            guard_start_pos = infront;
+        if was_already_blocked {
+            // Position already blocked by a wall
+            guard = infront;
             continue;
         }
 
-        let mut lab = input.clone();
-        lab.guard_pos = guard_start_pos;
-        *lab.grid.get_mut(infront.pos_vec()).unwrap() = Tile::Wall;
-
-        visited.iter_mut().for_each(|x| *x = make_bitflags!(Direction::{NONE}));
-
-        if is_loop(&lab, &mut visited) {
-            loops += 1;
+        if placed_walls.contains(&infront.pos) || infront.pos == input.guard_pos.pos {
+            guard = infront;
+            continue;
         }
 
-        guard_start_pos = infront;
+        // Test this loop with the wall infront
+        let mut lab = input.clone();
+        lab.guard_pos = guard;
+        *lab.grid.get_mut(infront.pos_vec()).unwrap() = Tile::Wall;
+
+        clear_array(&mut visited, make_bitflags!(Direction::{NONE}));
+
+        if is_loop(&lab, &mut visited) {
+            placed_walls.insert(infront.pos);
+        }
+
+        guard = infront;
     }
 
-    loops
+    let mut dbg_lab = input.clone();
+    for placed_wall in &placed_walls {
+        *dbg_lab
+            .grid
+            .get_mut((placed_wall.y as usize, placed_wall.x as usize))
+            .unwrap() = Tile::Guard;
+    }
+
+    placed_walls.len()
 }
 
 #[aoc(day6, part2, BruteForceParallel)]
@@ -265,10 +314,7 @@ pub fn part2_parallel(input: &ParseResult) -> usize {
         .collect::<Vec<_>>()
         .into_par_iter()
         .map(|(y, x)| {
-            if input.grid[(y, x)] == Tile::Wall
-                || (y, x) == input.guard_pos.pos_vec()
-                || !visted_in_part1[(y, x)]
-            {
+            if input.grid[(y, x)] == Tile::Wall || (y, x) == input.guard_pos.pos_vec() || !visted_in_part1[(y, x)] {
                 return 0;
             }
 
