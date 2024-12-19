@@ -30,7 +30,7 @@ fn neighbors(pos: I8Vec2, max: I8Vec2) -> impl Iterator<Item = I8Vec2> {
     })
 }
 
-fn dijkstra(input: &ParseResult, mut parse_first: u16, max: I8Vec2) -> Option<u32> {
+fn dijkstra(input: &ParseResult, mut parse_first: u16, max: I8Vec2) -> Option<(u32, HashSet<I8Vec2>)> {
     let mut corrupted = HashSet::new();
 
     for pos in input {
@@ -45,7 +45,7 @@ fn dijkstra(input: &ParseResult, mut parse_first: u16, max: I8Vec2) -> Option<u3
     let mut queue = vec![];
     queue.push((0u32, I8Vec2::ZERO));
     let mut visited = HashMap::new();
-    visited.insert(I8Vec2::ZERO, 0u32);
+    visited.insert(I8Vec2::ZERO, (0u32, I8Vec2::ZERO));
 
     while let Some((distance, pos)) = queue.pop() {
         for neighbor in neighbors(pos, max) {
@@ -57,11 +57,12 @@ fn dijkstra(input: &ParseResult, mut parse_first: u16, max: I8Vec2) -> Option<u3
                 continue;
             }
 
+            visited.insert(neighbor, (distance + 1, pos));
+
             if neighbor == max {
-                return Some(distance + 1);
+                return Some((distance + 1, collect_path(&visited, max)));
             }
 
-            visited.insert(neighbor, distance + 1);
             queue.push((distance + 1, neighbor));
         }
 
@@ -71,11 +72,32 @@ fn dijkstra(input: &ParseResult, mut parse_first: u16, max: I8Vec2) -> Option<u3
     None
 }
 
+fn collect_path(visited: &HashMap<I8Vec2, (u32, I8Vec2)>, end: I8Vec2) -> HashSet<I8Vec2> {
+    let mut path = HashSet::new();
+    let mut current = end;
+
+    while current != I8Vec2::ZERO {
+        path.insert(current);
+        (_, current) = *visited.get(&current).unwrap();
+    }
+
+    path
+}
+
 fn find_first_blocking_pos(input: &ParseResult, start_with: u16, max: I8Vec2) -> I8Vec2 {
-    for blocking_byte in start_with..=input.len() as u16 {
-        if dijkstra(input, blocking_byte, max).is_none() {
-            return input[(blocking_byte -1)  as usize];
+    let (_, mut current_path) = dijkstra(input, start_with, max).unwrap();
+
+    for new_blocking_byte in (start_with + 1)..input.len() as u16 {
+        if !current_path.contains(&input[new_blocking_byte as usize]) {
+            // The new blocking byte does not block the current path, so we can skip the dijkstra
+            continue;
         }
+
+        let Some((_, new_path)) = dijkstra(input, new_blocking_byte, max) else {
+            return input[(new_blocking_byte) as usize];
+        };
+
+        current_path = new_path;
     }
 
     panic!("No blocking position found");
@@ -83,7 +105,7 @@ fn find_first_blocking_pos(input: &ParseResult, start_with: u16, max: I8Vec2) ->
 
 #[aoc(day18, part1)]
 pub fn part1(input: &ParseResult) -> u32 {
-    dijkstra(input, 1024, I8Vec2::new(70, 70)).unwrap()
+    dijkstra(input, 1024, I8Vec2::new(70, 70)).unwrap().0
 }
 
 #[aoc(day18, part2, brute_force)]
@@ -94,8 +116,6 @@ pub fn part2(input: &ParseResult) -> String {
 
 #[cfg(test)]
 mod tests {
-    use glam::IVec2;
-
     use super::*;
 
     const EXAMPLE: &str = include_str!("../input/2024/day18_example.txt");
@@ -104,7 +124,7 @@ mod tests {
     #[test]
     fn example_part1() {
         let input = parse_input(EXAMPLE);
-        assert_eq!(dijkstra(&input, 12, I8Vec2::new(6, 6)), Some(22));
+        assert_eq!(dijkstra(&input, 12, I8Vec2::new(6, 6)).unwrap().0, 22);
     }
 
     #[test]
