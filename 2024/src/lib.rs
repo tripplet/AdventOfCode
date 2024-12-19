@@ -1,6 +1,12 @@
 #![allow(clippy::must_use_candidate)]
 #![allow(clippy::missing_panics_doc)]
 
+// Allow some clippy warnings regarding casting
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_precision_loss)]
+
 use aoc_runner_derive::aoc_lib;
 
 pub mod utils;
@@ -22,7 +28,7 @@ pub mod day13;
 // pub mod day15;
 // pub mod day16;
 // pub mod day17;
-// pub mod day18;
+pub mod day18;
 // pub mod day19;
 // pub mod day20;
 // pub mod day21;

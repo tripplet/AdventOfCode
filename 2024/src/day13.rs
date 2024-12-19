@@ -14,7 +14,7 @@ pub struct ClawMachine {
 
 #[aoc_generator(day13)]
 pub fn parse_input(input: &str) -> ParseResult {
-    let input = input.trim().replace("\r", "");
+    let input = input.trim().replace('\r', "");
 
     input
         .split("\n\n")
@@ -99,7 +99,6 @@ pub fn part1_analytic(input: &ParseResult) -> u64 {
         .iter()
         .map(|machine| match analytic_solution(machine) {
             Some((a, b)) if a <= 100 && b <= 100 => a as u64 * 3 + b as u64,
-            None => 0,
             _ => 0,
         })
         .sum()
@@ -113,7 +112,7 @@ pub fn part2(input: &ParseResult) -> u64 {
             let machine_10x = ClawMachine {
                 button_a: machine.button_a,
                 button_b: machine.button_b,
-                prize: machine.prize + 10000000000000,
+                prize: machine.prize + 10_000_000_000_000,
             };
 
             match analytic_solution(&machine_10x) {

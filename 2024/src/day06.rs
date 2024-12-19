@@ -211,10 +211,9 @@ fn is_loop(lab: &ParseResult, visited: &mut Array2<BitFlags<Direction>>) -> bool
         let visited_tile = visited.get_mut(next.pos_vec()).unwrap();
         if visited_tile.contains(next.direction) {
             return true;
-        } else {
-            *visited_tile |= next.direction;
         }
 
+        *visited_tile |= next.direction;
         pos = next;
     }
 }

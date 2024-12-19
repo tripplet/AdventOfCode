@@ -42,7 +42,7 @@ pub fn part1(input: &ParseResult) -> usize {
 
     loop {
         let next_free = disk.iter().skip(pos_free).position(|x| *x == -1).unwrap();
-        pos_free = pos_free + next_free;
+        pos_free += next_free;
 
         let next_data = disk
             .iter()
@@ -90,7 +90,7 @@ impl Display for Sector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.is_free() {
             for _ in 0..self.len {
-                write!(f, "{}", ".")?;
+                write!(f, ".")?;
             }
         } else {
             for _ in 0..self.len {
@@ -149,10 +149,9 @@ pub fn part2(input: &ParseResult) -> usize {
                         skip_from_start_next = sector_idx;
                     }
                     return false;
-                } else {
-                    continuous_non_free_sectors = false;
                 }
 
+                continuous_non_free_sectors = false;
                 sector.len >= disk[next_data].len && sector_idx + skip_from_start < next_data
             });
 
@@ -189,7 +188,7 @@ pub fn part2(input: &ParseResult) -> usize {
     let mut checksum = 0;
     let mut delta = 0;
 
-    for sector in disk.iter() {
+    for sector in &disk {
         if !sector.is_free() {
             for sector_idx in 0..sector.len {
                 checksum += (sector_idx + delta) * sector.value as usize;

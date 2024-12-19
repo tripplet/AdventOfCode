@@ -10,12 +10,14 @@ pub fn parse_input(input: &str) -> ParseResult {
 
 #[aoc(day1, part1)]
 pub fn part1(input: &ParseResult) -> isize {
-    42
+    dbg!(&input);
+
+    todo!()
 }
 
 #[aoc(day1, part2)]
 pub fn part2(input: &ParseResult) -> isize {
-    42
+    todo!()
 }
 
 #[cfg(test)]

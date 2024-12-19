@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use glam::I8Vec2;
@@ -110,7 +110,7 @@ pub fn part1(input: &ParseResult) -> u32 {
 
 #[aoc(day18, part2, brute_force)]
 pub fn part2(input: &ParseResult) -> String {
-    let pos = find_first_blocking_pos(&input, 1024, I8Vec2::new(70, 70));
+    let pos = find_first_blocking_pos(input, 1024, I8Vec2::new(70, 70));
     format!("{},{}", pos.x, pos.y)
 }
 

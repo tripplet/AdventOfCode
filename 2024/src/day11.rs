@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    io::Write,
-};
+use std::collections::HashMap;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
@@ -10,7 +7,7 @@ type ParseResult = Vec<Number>;
 
 #[aoc_generator(day11)]
 pub fn parse_input(input: &str) -> ParseResult {
-    input.trim().split_whitespace().map(|nb| nb.parse().unwrap()).collect()
+    input.split_whitespace().map(|nb| nb.parse().unwrap()).collect()
 }
 
 enum Blink {
@@ -25,7 +22,7 @@ fn single_blink(stone: u64) -> Blink {
         let digits = ((stone as f64).log10().floor() + 1f64).ceil() as u8;
 
         if digits % 2 == 0 {
-            let power = 10f64.powf(digits as f64 / 2.0) as u64;
+            let power = 10f64.powf(f64::from(digits) / 2.0) as u64;
             let x = (stone) / power;
             let y = (stone) - (x * power);
 
