@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use aoc_runner_derive::{aoc, aoc_generator};
 
 type Number = i64;
@@ -123,7 +121,7 @@ impl BitComputer {
                 self.pc += 2;
             }
 
-            _ => return OpcodeResult::Error(format!("Invalid opcode: {}", opcode)),
+            _ => return OpcodeResult::Error(format!("Invalid opcode: {opcode}")),
         }
 
         OpcodeResult::NoOutput
@@ -137,7 +135,7 @@ impl BitComputer {
             4 => self.reg[REG_A],
             5 => self.reg[REG_B],
             6 => self.reg[REG_C],
-            _ => panic!("Invalid operand: {}", raw_operand),
+            _ => panic!("Invalid operand: {raw_operand}"),
         }
     }
 }
@@ -151,19 +149,19 @@ pub fn part1(input: &ParseResult) -> String {
         match computer.run_opcode() {
             OpcodeResult::Output(output) => result.push(output),
             OpcodeResult::Halt => break,
-            OpcodeResult::Error(error) => panic!("Error: {}", error),
+            OpcodeResult::Error(error) => panic!("Error: {error}"),
             OpcodeResult::NoOutput => {}
         }
     }
 
-    result.iter().map(|n| n.to_string()).collect::<Vec<String>>().join(",")
+    result.iter().map(std::string::ToString::to_string).collect::<Vec<String>>().join(",")
 }
 
 #[aoc(day17, part2)]
 pub fn part2(input: &ParseResult) -> usize {
     let expeted_output = input.program.clone();
 
-    'FOR_LOOP: for idx in 0.. {
+    for idx in 0.. {
         //println!("idx: {}", idx);
         let mut computer = input.clone();
         computer.reg[REG_A] = idx as i64;
@@ -174,7 +172,7 @@ pub fn part2(input: &ParseResult) -> usize {
             match computer.run_opcode() {
                 OpcodeResult::Output(output) => result.push(output),
                 OpcodeResult::Halt => break,
-                OpcodeResult::Error(error) => panic!("Error: {}", error),
+                OpcodeResult::Error(error) => panic!("Error: {error}"),
                 OpcodeResult::NoOutput => {}
             }
 
@@ -185,7 +183,7 @@ pub fn part2(input: &ParseResult) -> usize {
                 continue
             }
 
-            continue 'FOR_LOOP;
+            break;
         }
     }
 
