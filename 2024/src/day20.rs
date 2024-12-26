@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use glam::{ivec2, IVec2};
-use itertools::Itertools;
 use ndarray::Array2;
 
 type ParseResult = Grid;
