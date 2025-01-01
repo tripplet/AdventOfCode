@@ -147,6 +147,8 @@ pub fn part1(input: &ParseResult) -> isize {
         }
     }
 
+
+
     // for d in cheated_distances.iter().sorted_unstable_by_key(|(&saved, _)| saved) {
     //     println!("{}: {}", d.0, d.1);
     // }
