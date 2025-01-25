@@ -13,16 +13,6 @@ itertools = "0.13.0"
 ndarray = "0.16.1"
 rayon = "1.8.0"
 regex = "1.10.2"
-#bitflags = "2.6.0"
-#dyn-clone = "1.0.16"
-#humantime = "2.1"
-#nalgebra = "0.33.2"
-#nom = "7.1.3"
-#num = "0.4.1"
-#ouroboros = "0.18.1"
-#petgraph = "0.6.4"
-#strum = "0.26.3"
-#strum_macros = "0.26.4"
 tinyvec = { version = "1.6.0", features = ["alloc", "std", "tinyvec_macros"] }
 
 [[bin]]

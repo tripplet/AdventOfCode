@@ -30,7 +30,7 @@ pub fn part2(input: &ParseResult) -> Number {
 
         for (idx, buy_seq) in delta.windows(4).enumerate() {
             if already_seen.insert(buy_seq) {
-                let bought_bananas = digits[idx + 4] as Number;
+                let bought_bananas = Number::from(digits[idx + 4]);
                 *bananas.entry(buy_seq).or_insert(0) += bought_bananas;
             }
         }
@@ -65,9 +65,9 @@ fn process(mut secret: Number, times: usize) -> Number {
 
 #[inline]
 fn process_step(mut secret: Number) -> Number {
-    secret = ((secret * 64) ^ secret) % 16777216;
-    secret = ((secret / 32) ^ secret) % 16777216;
-    secret = ((secret * 2048) ^ secret) % 16777216;
+    secret = ((secret * 64) ^ secret) % 16_777_216;
+    secret = ((secret / 32) ^ secret) % 16_777_216;
+    secret = ((secret * 2048) ^ secret) % 16_777_216;
     secret
 }
 
