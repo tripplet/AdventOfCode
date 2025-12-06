@@ -5,8 +5,7 @@ type ParseResult = Vec<Vec<Number>>;
 
 #[aoc_generator(day3)]
 pub fn parse_input(input: &str) -> ParseResult {
-    let batteries = input.replace('\r', "");
-    batteries
+    input
         .trim()
         .lines()
         .map(|line| {
@@ -29,7 +28,7 @@ fn part2(batteries: &ParseResult) -> usize {
 
 #[aoc(day3, part1, old_version)]
 fn part1_old(batteries: &ParseResult) -> usize {
-    let mut total = 0usize;
+    let mut total = 0;
     for row in batteries {
         // Find maximum exept last element
         let first = row[..row.len() - 1]
