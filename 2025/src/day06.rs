@@ -107,7 +107,7 @@ pub fn parse_input_part2(input: &str) -> ParseResultPart2 {
         .collect::<Vec<_>>();
 
     // Extract column numbers
-    let mut equations = vec![];
+    let mut equations = Vec::with_capacity(op_positions.len());
     for idx in 0..op_positions.len() {
         let mut equation = Equation {
             numbers: vec![],
@@ -121,17 +121,17 @@ pub fn parse_input_part2(input: &str) -> ParseResultPart2 {
         };
 
         for x in start..=end {
-            let mut nb = vec![];
-            for y in 0..lines.len() - 1 {
+            let mut nb = 0usize;
+            let mut digit = 0;
+            for y in (0..lines.len() - 1).rev() {
                 let ch = lines[y][x];
                 if ch.is_digit(10) {
-                    nb.push(ch);
+                    nb += (ch.to_digit(10).unwrap() * 10u32.pow(digit)) as usize;
+                    digit += 1;
                 }
             }
 
-            equation
-                .numbers
-                .push(nb.iter().collect::<String>().parse::<Number>().unwrap());
+            equation.numbers.push(nb);
         }
 
         equations.push(equation);
