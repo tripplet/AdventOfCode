@@ -19,12 +19,12 @@ pub fn parse_input(input: &str) -> ParseResult {
 
 #[aoc(day3, part1)]
 fn part1(batteries: &ParseResult) -> usize {
-    get_joltage(&batteries, 2)
+    get_joltage(batteries, 2)
 }
 
 #[aoc(day3, part2)]
 fn part2(batteries: &ParseResult) -> usize {
-    get_joltage(&batteries, 12)
+    get_joltage(batteries, 12)
 }
 
 #[aoc(day3, part1, old_version)]
@@ -57,14 +57,14 @@ fn get_joltage(batteries: &[Vec<u8>], number_len: u32) -> usize {
 
         for pos in 0u32..number_len {
             // Find maximum leave enought elements for the remaining digits
-            let found_max = row[start..(row.len() - number_len as usize + pos as usize + 1)]
+            let found_max = row[start..=(row.len() - number_len as usize + pos as usize)]
                 .iter()
                 .enumerate()
                 .max_by(|x, y| (*x.1).cmp(y.1).then(y.0.cmp(&x.0)))
                 .unwrap();
 
             joltage += *found_max.1 as usize * 10usize.pow(number_len - pos - 1);
-            start += found_max.0 as usize + 1;
+            start += found_max.0 + 1;
         }
 
         total += joltage;

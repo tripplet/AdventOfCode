@@ -1,4 +1,4 @@
-use std::{ops::RangeInclusive, usize};
+use std::ops::RangeInclusive;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
@@ -88,7 +88,7 @@ fn is_invalid_id_part2_pattern(string_rep: &[u8], pattern_len: usize) -> bool {
         }
     }
 
-    return true;
+    true
 }
 
 #[cfg(test)]

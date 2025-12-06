@@ -19,17 +19,12 @@ pub fn parse_input(input: &str) -> ParseResult {
 pub fn part1(input: &ParseResult) -> isize {
     let mut pos = 50;
     let mut times_at_zero = 0;
-    for &rot in input {
-        pos += rot;
-        if rot > 0 {
-            pos %= 100;
-        } else {
-            while pos < 0 {
-                pos += 100;
-            }
-        }
 
-        pos %= 100;
+    for &rotation in input {
+        pos = (pos + rotation) % 100;
+        if pos < 0 {
+            pos += 100;
+        }
 
         if pos == 0 {
             times_at_zero += 1;
@@ -44,21 +39,20 @@ pub fn part2(input: &ParseResult) -> isize {
     let mut pos = 50;
     let mut pos_prev = 50;
     let mut times_zero = 0;
-    for &rot in input {
-        let mut time_over_zero = 0;
 
+    for &rot in input {
         pos += rot;
 
         if rot > 0 {
             while pos > 100 {
                 pos -= 100;
-                time_over_zero += 1;
+                times_zero += 1;
             }
         } else {
             while pos < 0 {
                 pos += 100;
                 if pos_prev != 0 {
-                    time_over_zero += 1;
+                    times_zero += 1;
                 }
 
                 pos_prev = pos;
@@ -72,7 +66,6 @@ pub fn part2(input: &ParseResult) -> isize {
         }
 
         pos_prev = pos;
-        times_zero += time_over_zero;
     }
 
     times_zero
