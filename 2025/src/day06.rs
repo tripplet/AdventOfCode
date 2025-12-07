@@ -42,10 +42,9 @@ pub fn parse_input_part1(input: &str) -> ParseResultPart1 {
     let lines = input.trim().lines().collect::<Vec<_>>();
     let mut numbers = vec![];
 
-    for idx in 0..lines.len() - 1 {
+    for line in lines.iter().take(lines.len() - 1) {
         numbers.push(
-            lines[idx]
-                .split_ascii_whitespace()
+            line.split_ascii_whitespace()
                 .map(|nb| nb.parse::<Number>().unwrap())
                 .collect::<Vec<_>>(),
         );
@@ -89,9 +88,9 @@ pub fn parse_input_part2(input: &str) -> ParseResultPart2 {
         .map(|line| line.chars().collect::<Vec<_>>())
         .collect::<Vec<_>>();
 
-    let max_len = lines.iter().map(|line| line.len()).max().unwrap();
+    let max_len = lines.iter().map(std::vec::Vec::len).max().unwrap();
 
-    for line in lines.iter_mut() {
+    for line in &mut lines {
         if line.len() < max_len {
             line.extend(vec![' '; max_len - line.len()]);
         }
@@ -125,7 +124,7 @@ pub fn parse_input_part2(input: &str) -> ParseResultPart2 {
             let mut digit = 0;
             for y in (0..lines.len() - 1).rev() {
                 let ch = lines[y][x];
-                if ch.is_digit(10) {
+                if ch.is_ascii_digit() {
                     nb += (ch.to_digit(10).unwrap() * 10u32.pow(digit)) as usize;
                     digit += 1;
                 }
