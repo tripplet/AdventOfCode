@@ -1,6 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use crate::utils::Pos2;
+use crate::utils::Vec2;
 
 type Number = i32;
 
@@ -12,13 +12,12 @@ pub struct ParseResult {
 
 #[derive(Debug)]
 struct Shape {
-    size: Pos2<usize>,
-    shape: Vec<Vec<bool>>,
+    size: Vec2<usize>,
 }
 
 #[derive(Debug)]
 struct Region {
-    size: Pos2<usize>,
+    size: Vec2<usize>,
     quantities: Vec<Number>,
 }
 
@@ -41,23 +40,19 @@ pub fn parse_input(input: &str) -> ParseResult {
             shape.push(line.chars().map(|ch| ch == '#').collect());
         }
         shapes.push(Shape {
-            size: Pos2 {
+            size: Vec2 {
                 y: shape.len(),
                 x: shape[0].len(),
             },
-            shape,
         });
     }
 
-    let mut region_strings = parts.next().unwrap().lines();
-
-    while let Some(part) = region_strings.next() {
-        dbg!(part);
+    for part in parts.next().unwrap().lines() {
         let (size, quantities) = part.split_once(':').unwrap();
         let size = size.trim().split_once('x').unwrap();
 
         regions.push(Region {
-            size: Pos2 {
+            size: Vec2 {
                 y: size.1.parse().unwrap(),
                 x: size.0.parse().unwrap(),
             },
@@ -105,6 +100,6 @@ mod tests {
     #[test]
     fn input_part1() {
         let input = parse_input(INPUT);
-        assert_eq!(part1(&input), 0);
+        assert_eq!(part1(&input), 555);
     }
 }

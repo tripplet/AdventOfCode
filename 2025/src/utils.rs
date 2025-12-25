@@ -9,13 +9,13 @@ pub const NEIGHBORS_2D: &[(i32, i32)] = &[
     (1, 1),
 ];
 
-#[derive(Debug, Copy, Clone)]
-pub struct Pos2<T> {
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Vec2<T> {
     pub y: T,
     pub x: T,
 }
 
-impl<T> From<(T, T)> for Pos2<T> {
+impl<T> From<(T, T)> for Vec2<T> {
     fn from(value: (T, T)) -> Self {
         Self {
             y: value.0,
@@ -24,7 +24,7 @@ impl<T> From<(T, T)> for Pos2<T> {
     }
 }
 
-impl<T: std::ops::Add<Output = T>> std::ops::Add<Pos2<T>> for Pos2<T>
+impl<T: std::ops::Add<Output = T>> std::ops::Add<Vec2<T>> for Vec2<T>
 where
     T: Copy,
 {
@@ -38,8 +38,13 @@ where
     }
 }
 
-macro_rules! pos2 {
+/// Macro to create a new `Vec2<T>` instance, order is y, x
+/// ```rust
+/// vec!(2, 4);
+/// ```
+#[allow(unused_macros)]
+macro_rules! vec2 {
     ($y:expr, $x:expr) => {
-        crate::utils::Pos2 { y: $y, x: $x }
+        crate::utils::Vec2 { y: $y, x: $x }
     };
 }

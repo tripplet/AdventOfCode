@@ -12,7 +12,7 @@ pub struct ParseResult {
 pub fn parse_input(input: &str) -> ParseResult {
     let mut parsed = ParseResult::new();
 
-    for line in input.trim().lines().map(|line| line.trim()) {
+    for line in input.trim().lines().map(str::trim) {
         let (left, right) = line.split_once(": ").unwrap();
         parsed.add(left, right.split(' '));
     }
@@ -82,7 +82,7 @@ fn count_paths(
 
     let mut total = 0;
     for dest in &input.graph[&start] {
-        total += count_paths(input, cache, *dest, end)
+        total += count_paths(input, cache, *dest, end);
     }
 
     cache.insert(start, total);
